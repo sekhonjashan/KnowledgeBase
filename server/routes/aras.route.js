@@ -1,3 +1,4 @@
+// import goes here
 const express = require('express');
 const app = express();
 const aras = express.Router();
@@ -9,14 +10,21 @@ const path = require('path');
 const mysql = require('mysql');
 const async = require('async');
 const csvHeaders = require('csv-headers');
+
+// To create table in DB
 const tblnm = "R";
+
+// Static file path
 var csvfn = "files/sample.csv";
+
+//DB connection object
 var dbcon = mysql.createConnection({
     host: "127.0.0.1",
     user: "root",
     password: "adminroot",
     database: "test"
 });
+
 
 aras.route('/getQuery').get(function (req, res) {
     console.log(req.query.ra);
@@ -51,6 +59,7 @@ aras.route('/getQuery').get(function (req, res) {
     }
 });
 
+// To check persistent DB connection
 function connectionStatus(callback) {
     return new Promise((res, rej) => {
         if (dbcon.state == 'authenticated') {
@@ -66,6 +75,7 @@ function connectionStatus(callback) {
         }
     });
 }
+
 function selectCommand(sql) {
     var regex = /DISTINCT /gi;
     sql = sql.replace(regex, '');
@@ -86,6 +96,9 @@ function selectCommand(sql) {
     })
 
 }
+
+// https://techsparx.com/nodejs/howto/csv2mysql.html
+
 aras.route('/upload').post(function (req, res) {
     csvfn = 'files/' + req.body.params.ra;
     return new Promise((resolve, reject) => {
