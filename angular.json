@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "KnowledgeBase": {
+    "ARAS": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/KnowledgeBase",
+            "outputPath": "dist/ARAS",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -63,18 +63,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "KnowledgeBase:build"
+            "browserTarget": "ARAS:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "KnowledgeBase:build:production"
+              "browserTarget": "ARAS:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "KnowledgeBase:build"
+            "browserTarget": "ARAS:build"
           }
         },
         "test": {
@@ -111,15 +111,15 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "KnowledgeBase:serve"
+            "devServerTarget": "ARAS:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "KnowledgeBase:serve:production"
+              "devServerTarget": "ARAS:serve:production"
             }
           }
         }
       }
     }},
-  "defaultProject": "KnowledgeBase"
+  "defaultProject": "ARAS"
 }

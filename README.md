@@ -1,14 +1,4 @@
-Project is a Relation alegbra calculator.
-
-We need the following :-
-
-1. NPM
-2. Node JS
-3. Angular CLI
-4. MySQL
-5. Myworkbench (Preferred , not required)
-
-# KnowledgeBase
+# ARAS
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.3.18.
 
