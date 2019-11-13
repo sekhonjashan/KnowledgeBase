@@ -4,6 +4,8 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { FileUploadComponent } from './file-upload/file-upload.component';
+import { ArasService } from './services/aras.service';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -12,9 +14,10 @@ import { FileUploadComponent } from './file-upload/file-upload.component';
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    HttpClientModule
   ],
-  providers: [],
+  providers: [ArasService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

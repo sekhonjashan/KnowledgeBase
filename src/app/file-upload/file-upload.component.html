@@ -1,1 +1,24 @@
-<p>file-upload works!</p>
+<div class="row">
+    <div class="col-md-12 mt-3">
+        <div class="position-absolute col" style="height: 100%;cursor: no-drop;" *ngIf="isUploaded">
+            <div class="spinner-border text-dark position-absolute" style="top:50%;left:40%;"></div>
+        </div>
+        <form method="post" action="#" id="#">
+            <div class="form-group files">
+                <label>Upload Your File </label>
+                <input type="file" class="form-control" (change)="handleFileInput($event.target.files)">
+            </div>
+        </form>
+    </div>
+    <div class="col-md-12">
+        <button class="btn btn-primary float-right" (click)="uploadFile()" [disabled]="isUploaded">Upload</button>
+    </div>
+    <div class="col mt-3">
+        <div class="alert alert-danger" *ngIf="isFileSlected">
+            Please select a file to upload
+        </div>
+        <div class="alert alert-primary" *ngIf="uploadStatus">
+                <strong>Success!</strong> File uploaded successfully.
+            </div>
+    </div>
+</div>

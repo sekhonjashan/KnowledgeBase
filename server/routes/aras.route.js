@@ -21,43 +21,10 @@ var csvfn = "files/sample.csv";
 var dbcon = mysql.createConnection({
     host: "127.0.0.1",
     user: "root",
-    password: "adminroot",
+    password: "password",
     database: "test"
 });
 
-
-aras.route('/getQuery').get(function (req, res) {
-    console.log(req.query.ra);
-    // var sql = raToSql.getSql("π[studentName, subjectName](Subjects) U σ[a=10](A)");
-    var sql;
-    try {
-        if(req.query.ra && req.query.ra.toLowerCase() == 'getall'){
-            sql = "SELECT * FROM R";
-        }else{
-        sql = raToSql.getSql(req.query.ra);
-        }
-        if (!sql) {
-            res.send({
-                error: {
-                    code: "Query is Invalid, Try with Valid Query"
-                }
-            })
-        }
-        selectCommand(sql).then((resp) => {
-            res.send({ query: resp });
-        }, (err) => {
-            res.send({ error: err });
-        });
-    }
-    catch (ex) {
-        console.log(ex);
-        res.send({
-            error: {
-                code: "Please enter valid Relation Algebra Query"
-            }
-        })
-    }
-});
 
 // To check persistent DB connection
 function connectionStatus(callback) {
