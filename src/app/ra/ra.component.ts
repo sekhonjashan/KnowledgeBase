@@ -54,43 +54,7 @@ export class RAComponent implements OnInit {
       }
     }
   }
-  // unionByFormula(parent, child, unionAll) {
-  //   parent.forEach((valP) => {
-  //     child.forEach((valC) => {
-  //       let count = 0;
-  //       for (let index in valC) {
-  //         if (valC[index] == valP[index]) {
-  //           count++;
-  //         }
-  //       }
-  //       if (count == Object.keys(valC).length) {
-  //         var temp = Object.assign({}, valP);
-  //         let idx = this.isAvailable(unionAll, temp);
-  //         if (idx == -1) {
-  //           temp.count = 1;
-  //           unionAll.push(temp);
-  //         } else {
-  //           unionAll[idx].count += 1;
-  //         }
-  //         //console.log(valC ,2);
-  //       } else {
-  //         var temp = Object.assign({}, valP);
-  //         let idx = this.isAvailable(unionAll, temp);
-  //         // if(this.isAvailable(unionAll , temp) == -1){
-  //         //   temp.count = 1;
-  //         //   unionAll.push(temp);
-  //         // }
-  //         if (idx == -1) {
-  //           temp.count = 1;
-  //           unionAll.push(temp);
-  //         } else {
-  //           unionAll[idx].count += 1;
-  //         }
-  //         //console.log(valC ,1);
-  //       }
-  //     });
-  //   });
-  // }
+ 
   isAvailable(arr, obj) {
     let flag = -1;
     arr.forEach((item, i) => {
@@ -184,29 +148,10 @@ export class RAComponent implements OnInit {
       return mapObj[matched];
     });
     return raQuery;
-    //   var regex = /</gi;
-    //   raQuery = raQuery.replace(regex, '[');
-    //   regex = />/gi;
-    //   raQuery = raQuery.replace(regex, ']');
-    // if(raQuery.indexOf('project') != -1){
-    //   regex = /project/gi;
-    //   raQuery = raQuery.replace(regex, 'π');
-    // }else  if(raQuery.indexOf('select') != -1){
-    //   regex = /select/gi;
-    //   raQuery = raQuery.replace(regex, 'σ');
-    // }else  if(raQuery.indexOf('union') != -1){
-    //   regex = /union/gi;
-    //   raQuery = raQuery.replace(regex, '∪');
-    // }else  if(raQuery.indexOf('natjoin') != -1){
-    //   regex = /natjoin/gi;
-    //   raQuery = raQuery.replace(regex, '⋈');
-    // }
+    
 
     console.log(raQuery);
-    //     Projection: Proj[a,b](A), π[a,b](A)
-    // Selection: Sel[Condition](A), σ[Condition](A)
-    // Natural Join: A |x| B, A ⋈ B
-    // Union: A U B, A ∪ B
+    
   }
   getKeys(obj) {
     return Object.keys(obj).sort();
