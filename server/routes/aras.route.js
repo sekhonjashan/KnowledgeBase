@@ -12,7 +12,7 @@ const async = require('async');
 const csvHeaders = require('csv-headers');
 
 // To create table in DB
-const tblnm = "R";
+const tblnm = "J";
 
 // Static file path
 var csvfn = "files/sample.csv";
@@ -109,7 +109,7 @@ aras.route('/upload').post(function (req, res) {
                     if (fieldnms !== '') fieldnms += ','
                     if (qs !== '') qs += ',';
                     if (!hdr) {
-                        hdr = "Dummy"
+                        hdr = "Annotation"
                     }
                     fields += ` ${hdr} TEXT`;
                     fieldnms += ` ${hdr}`;
