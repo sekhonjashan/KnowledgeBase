@@ -6,11 +6,13 @@ import { AppComponent } from './app.component';
 import { FileUploadComponent } from './file-upload/file-upload.component';
 import { ArasService } from './services/aras.service';
 import { HttpClientModule } from '@angular/common/http';
+import { RAComponent } from './ra/ra.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    FileUploadComponent
+    FileUploadComponent,
+    RAComponent
   ],
   imports: [
     BrowserModule,

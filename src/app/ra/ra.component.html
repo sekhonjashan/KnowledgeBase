@@ -57,10 +57,19 @@
             <li>Union: <span class="badge badge-secondary">A union B, A ∪ B</span></li>
         </ul>
     </div>
-    <span><b>Sample Query</b> : π&lt;a,c&gt;((π&lt;a,b&gt;(R) natjoin π&lt;b,c&gt;(R)) U (π&lt;a,c&gt;(R) natjoin π&lt;b,c&gt;(R)))</span>
+    <!-- (π<a,c>[((π<a,b>[R] natjoin π<b,c>[R]) U (π<a,c>[R] natjoin π<b,c>[R]))]) -->
+    <span><b>Sample Query</b> : π&lt;a,c&gt;[((π&lt;a,b&gt;[R] natjoin π&lt;b,c&gt;[R]) U (π&lt;a,c&gt;[R] natjoin π&lt;b,c&gt;[R]))]</span>
 </div>
 <div class="row">
-    
+    <!-- <div class="col mt-3">
+        <div class="alert alert-warning" *ngIf="!ta.value.length && initial">
+            Please enter Relational Algebra Query!
+        </div>
+        <div class="alert alert-danger" *ngIf="response?.error">
+            {{response.error.code}}
+            <span *ngIf="response?.error?.sqlMessage"> "{{response?.error?.sqlMessage}}"</span>
+        </div>
+    </div> -->
     <div class="col-md-12">
         <table class="table table-bordered mt-3" *ngIf="response.length">
             <thead>
