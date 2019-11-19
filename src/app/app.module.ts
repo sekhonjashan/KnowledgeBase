@@ -7,6 +7,7 @@ import { FileUploadComponent } from './file-upload/file-upload.component';
 import { ArasService } from './services/aras.service';
 import { HttpClientModule } from '@angular/common/http';
 import { RAComponent } from './ra/ra.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { RAComponent } from './ra/ra.component';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    HttpClientModule
+    HttpClientModule,
+    FormsModule
   ],
   providers: [ArasService],
   bootstrap: [AppComponent]

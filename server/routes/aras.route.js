@@ -9,31 +9,44 @@ const async = require('async');
 const csvHeaders = require('csv-headers');
 const app = express();
 const aras = express.Router();
-const tblnm = "R";
+let tblnm = "R";
 var csvfn = "files/sample.csv";
 var dbcon = mysql.createConnection({
     host: "127.0.0.1",
     user: "root",
     password: "password",
-      database: "test"
+    database: "test"
 });
-
-
-function intersection(o1, o2) {
-    return Object.keys(o1).concat(Object.keys(o2)).sort().reduce(function (r, a, i, aa) {
+var tab_name = "multiplicity";
+function commonProperties(obj1, obj2) {
+    return Object.keys(obj1).concat(Object.keys(obj2)).sort().reduce(function (r, a, i, aa) {
         if (i && aa[i - 1] === a && a != "annotations") {
             r.push(a);
         }
         return r;
     }, []);
 }
+function logicalConjunction(p, q) {
+    console.log(+p, q, 'p,q');
+    if (+p && +q) {
+        return 1;
+    }
+    return 0;
+}
+function logicalDisjunction(p, q) {
+    if (+p || +q) {
+        return 1;
+    }
+    return 0;
+}
 function raJoin(res) {
+    console.log(tab_name, 'logggggggggggggg');
     var joinCollection = [];
     if (res.length > 1) {
         res[0].forEach((frItem, i) => {
             res[1].forEach((secItem, j) => {
                 let flag = true;
-                var similarProp = intersection(frItem, secItem);
+                var similarProp = commonProperties(frItem, secItem);
                 similarProp.forEach((val) => {
                     if (frItem[val] != secItem[val]) {
                         flag = false;
@@ -41,7 +54,12 @@ function raJoin(res) {
                 })
                 if (flag) {
                     var obj = { ...frItem, ...secItem };
-                    obj['annotations'] = frItem['annotations'] * secItem['annotations'];
+                    if (tab_name == 'multiplicity') {
+                        obj['annotations'] = frItem['annotations'] * secItem['annotations'];
+                    } else if (tab_name == 'standard') {
+                        console.log(logicalConjunction(frItem['annotations'], secItem['annotations']));
+                        obj['annotations'] = logicalConjunction(frItem['annotations'], secItem['annotations']);
+                    }
                     joinCollection.push(obj);
                 }
             });
@@ -71,18 +89,21 @@ function raJoin(res) {
 function raUnion(res) {
     console.log(res);
     var unionCollection = Object.assign([], res[0]);
-    res[1].forEach((res) => {
-        let idx = isAvailable(unionCollection, res);
+    res[1].forEach((raData) => {
+        console.log(res[0]);
+        let idx = isAvailable(unionCollection, raData);
         if (idx != -1) {
-            unionCollection[idx]['annotations'] = parseInt(unionCollection[idx]['annotations']) + parseInt(res['annotations']);
+            if (tab_name == 'multiplicity') {
+                unionCollection[idx]['annotations'] = parseInt(unionCollection[idx]['annotations']) + parseInt(raData['annotations']);
+            } else if (tab_name == 'standard') {
+                unionCollection[idx]['annotations'] = logicalDisjunction(parseInt(unionCollection[idx]['annotations']), parseInt(raData['annotations']));
+            }
         } else {
-            unionCollection.push(res);
+            unionCollection.push(raData);
         }
     });
-    console.log(unionCollection);
     return unionCollection;
 }
-
 function isAvailable(arr, obj) {
     let flag = -1;
     arr.forEach((item, i) => {
@@ -99,11 +120,16 @@ function isAvailable(arr, obj) {
     });
     return flag;
 }
-const getNumFruit = (sql) => {
-    return selectCommand(sql).then((resp) => resp);
+const getQueryData = (sql, res) => {
+    sql = sql.replace(/0987654321/g, "_");
+    return selectCommand(sql).then((resp) => resp, (err) => {
+        console.log(err);
+        res.send({
+            message: err.code + " " + err.sqlMessage
+        })
+    });
 }
-
-const forLoop = async (obj, req, res) => {
+const queryEvaluation = async (obj, req, res) => {
     var frt = Object.keys(obj);
     for (let index = 0; index < frt.length; index++) {
         let val = frt[index];
@@ -112,13 +138,14 @@ const forLoop = async (obj, req, res) => {
             var results = [];
             for (let j = 0; j < nestedQuery.length; j++) {
                 try {
-                    sql = raToSql.getSql(nestedQuery[j]);
-                    const numFruit = await getNumFruit(sql, j, nestedQuery);
-                    results.push(numFruit)
+                    nestedQuery[j] = nestedQuery[j].indexOf('σ') != -1 ? nestedQuery[j].replace(/,annotations/gi, "") : nestedQuery[j];
+                    let sql = raToSql.getSql(nestedQuery[j]);
+                    const data = await getQueryData(sql, res);
+                    results.push(data)
                     if (j === nestedQuery.length - 1) {
-                        if(obj[val].symbol == '⋈'){
+                        if (obj[val].symbol == '⋈') {
                             obj[val].results = raJoin(results);
-                        }else{
+                        } else {
                             obj[val].results = raUnion(results);
                         }
                         if (obj[val].results && obj[val].results.length) {
@@ -131,40 +158,108 @@ const forLoop = async (obj, req, res) => {
                 catch (ex) {
                     console.log(ex);
                     res.send({
-                        error: {
-                            code: "Query is Invalid, Please Try with valid Relation Algebra Query"
-                        }
-                    })
+                        message: "Query is Invalid, Please Try with valid Relation Algebra Query"
+                    });
                 }
             }
-        } else if(obj[val].isApi && !obj[val].final && !obj[val].symbol){
-            sql = raToSql.getSql(obj[val].value);
-            obj[val].results = await getNumFruit(sql)
-            var message = await dataInsertion(val, obj[val].results);
-            console.log(message);
-        }else if (obj[val].final) {
-            sql = raToSql.getSql(obj[val].value);
-            const numFruit = await getNumFruit(sql);
-            let temp = Object.assign([] , numFruit);
-            let collection = [];
-            temp.forEach((obj)=>{
-                let idx = isAvailable(collection , obj);
-                if(idx == -1){
-                    collection.push(obj);
-                }else{
-                    collection[idx]['annotations'] = parseInt(collection[idx]['annotations']) + parseInt(obj["annotations"]);
+        } else if (obj[val].isApi && !obj[val].final && !obj[val].symbol) {
+            try {
+                obj[val].value = obj[val].value.indexOf('σ') != -1 ? obj[val].value.replace(/,annotations/gi, "") : obj[val].value;
+                sql = raToSql.getSql(obj[val].value);
+                obj[val].results = await getQueryData(sql, res)
+                var message = await dataInsertion(val, obj[val].results);
+                console.log(message);
+            } catch (ex) {
+                console.log(ex);
+                res.send({
+                    message: "Query is Invalid, Please Try with valid Relation Algebra Query"
+                });
+            }
+        } else if (obj[val].final) {
+            try {
+                console.log(obj[val].value, 'obj[val].value obj[val].value obj[val].value obj[val].value obj[val].value');
+                let data;
+                if (obj[val].value && (obj[val].value.indexOf('σ') != -1 || obj[val].value.indexOf('π') != -1) || (frt.length == 1 && (obj[val].value.indexOf('⋈') == -1 && obj[val].value.indexOf('∪') == -1))) {
+                    obj[val].value = obj[val].value.indexOf('σ') != -1 ? obj[val].value.replace(/,annotations/gi, "") : obj[val].value;
+                    sql = raToSql.getSql(obj[val].value);
+                    data = await getQueryData(sql, res);
+                } else {
+                    let nestedQuery = obj[val].value.split(obj[val].symbol);
+                    nestedQuery = nestedQuery.map((val) => {
+                        return val.replace(/\(|\)/g, '');
+                    });
+                    console.log(nestedQuery,nestedQuery,nestedQuery,nestedQuery);
+                    if (obj[val].symbol == '⋈' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
+                        data = raJoin([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
+                    } else if (obj[val].symbol == '∪' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
+                        data = raUnion([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
+                    } else {
+                        let dataResult = [];
+                        for(let m = 0; m < nestedQuery.length ; m++){
+                        //nestedQuery.forEach((val) => {
+                            let sql = raToSql.getSql(nestedQuery[m]);
+                            const reslt = await getQueryData(sql, res);
+                            dataResult.push(reslt)
+                        //});
+                        }
+                        if(obj[val].symbol == '⋈'){
+                            data = raJoin(dataResult);
+                        }else{
+                            data = raJoin(dataResult);
+                        } 
+                    }
                 }
-            });
-            res.send(collection);
+                // let temp = Object.assign([], data);
+                // let collection = [];
+                // temp.forEach((obj) => {
+                //     let idx = isAvailable(collection, obj);
+                //     if (idx == -1) {
+                //         collection.push(obj);
+                //     } else {
+                //         collection[idx]['annotations'] = parseInt(collection[idx]['annotations']) + parseInt(obj["annotations"]);
+                //     }
+                // })
+                res.send(data);
+            } catch (ex) {
+                console.log(ex);
+                res.send({
+                    message: "Query is Invalid, Please Try with valid Relation Algebra Query"
+                });
+            }
         } else {
+            // let nestedQuery = obj[val].value.split(obj[val].symbol);
+            // nestedQuery = nestedQuery.map((val) => {
+            //     return val.replace(/\(|\)/g, '');
+            // });
+            // if (obj[val].symbol == '⋈') {
+            //     obj[val].results = raJoin([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
+            // } else {
+            //     obj[val].results = raUnion([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
+            // }
+
             let nestedQuery = obj[val].value.split(obj[val].symbol);
             nestedQuery = nestedQuery.map((val) => {
                 return val.replace(/\(|\)/g, '');
             });
-            if(obj[val].symbol == '⋈'){
+            console.log(nestedQuery,nestedQuery,nestedQuery,nestedQuery);
+            if (obj[val].symbol == '⋈' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
                 obj[val].results = raJoin([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-            }else{
+            } else if (obj[val].symbol == '∪' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
                 obj[val].results = raUnion([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
+            } else {
+                let dataResult = [];
+                for(let m = 0; m < nestedQuery.length ; m++){
+                //nestedQuery.forEach((val) => {
+                    let sql = raToSql.getSql(nestedQuery[m]);
+                    const reslt = await getQueryData(sql, res);
+                    dataResult.push(reslt)
+                //});
+                }
+                if(obj[val].symbol == '⋈'){
+                    obj[val].results = dataResult.length > 1 ? raJoin(dataResult) : dataResult[0];
+                }else{
+                    obj[val].results =  dataResult.length > 1 ? raJoin(dataResult) : dataResult[0];
+                } 
             }
             if (obj[val].results && obj[val].results.length) {
                 var message = await dataInsertion(val, obj[val].results);
@@ -257,86 +352,56 @@ const forLoop = async (obj, req, res) => {
     // });
 }
 
-function getMutiplicity(obj, req, res) {
-    Object.keys(obj).forEach((val) => {
-        var results = [];
-        if (obj[val].isApi && !obj[val].final) {
-            var nestedQuery = obj[val].value.split(obj[val].symbol);
-            console.log(nestedQuery);
-            nestedQuery.forEach(function (query, i) {
-                try {
-                    sql = raToSql.getSql(query);
-                    if (!sql) {
-                        res.send({
-                            error: {
-                                code: "Query is Invalid, Try with Valid Query"
-                            }
-                        })
-                    }
-                    selectCommand(sql).then((resp) => {
-                        results.push(resp)
-                        if (i === nestedQuery.length - 1) {
-                            console.log(raJoin(results));
-                        }
-                    }, (err) => {
-                        res.send({ error: err });
-                    });
-                }
-                catch (ex) {
-                    console.log(ex);
-                    res.send({
-                        error: {
-                            code: "Please enter valid Relation Algebra Query"
-                        }
-                    })
-                }
+// function getMutiplicity(obj, req, res) {
+//     Object.keys(obj).forEach((val) => {
+//         var results = [];
+//         if (obj[val].isApi && !obj[val].final) {
+//             var nestedQuery = obj[val].value.split(obj[val].symbol);
+//             console.log(nestedQuery);
+//             nestedQuery.forEach(function (query, i) {
+//                 try {
+//                     sql = raToSql.getSql(query);
+//                     if (!sql) {
+//                         res.send({
+//                                 message: "Query is Invalid, Try with Valid Query"
+//                         })
+//                     }
+//                     selectCommand(sql).then((resp) => {
+//                         results.push(resp)
+//                         if (i === nestedQuery.length - 1) {
+//                             console.log(raJoin(results));
+//                         }
+//                     }, (err) => {
+//                         res.send({ message: err.code });
+//                     });
+//                 }
+//                 catch (ex) {
+//                     console.log(ex);
+//                     res.send({
+//                             message: "Please enter valid Relation Algebra Query"
+//                     })
+//                 }
 
-            });
-        }
-    });
-}
-aras.route('/mutliplicity').get(function (req, res) {
+//             });
+//         }
+//     });
+// }
+aras.route('/multiplicity').get(function (req, res) {
     let params = JSON.parse(req.query.ra);
-    forLoop(params, req, res);
-});
-aras.route('/getQuery').get(function (req, res) {
-    console.log(req.query.ra);
-    // var sql = raToSql.getSql("π[studentName, subjectName](Subjects) U σ[a=10](A)");
-    var sql, results = [];
+    tab_name = params['ratype'];
+    console.log(tab_name);
     try {
-        if (req.query.ra && typeof (req.query.ra) == 'string' && req.query.ra.toLowerCase() == 'getall') {
-            sql = "SELECT * FROM R";
-        } else {
-            var nestedQuery = req.query.ra ? req.query.ra : [];
-            nestedQuery.forEach(function (query, i) {
-                sql = raToSql.getSql(query);
-                if (!sql) {
-                    res.send({
-                        error: {
-                            code: "Query is Invalid, Try with Valid Query"
-                        }
-                    })
-                }
-
-                selectCommand(sql).then((resp) => {
-                    results.push(resp)
-                    if (i === nestedQuery.length - 1) {
-                        res.send(results);
-                    }
-                }, (err) => {
-                    res.send({ error: err });
-                });
-            });
+        console.log(params.query);
+        let validQuery = raToSql.getSql(params.query);
+        console.log(validQuery);
+        if (validQuery) {
+            queryEvaluation(params.bodmas, req, res);
         }
-
-    }
-    catch (ex) {
-        console.log(ex);
+    } catch (err) {
+        console.log(err);
         res.send({
-            error: {
-                code: "Please enter valid Relation Algebra Query"
-            }
-        })
+            message: "Query is Invalid, Please Try with valid Relation Algebra Query"
+        });
     }
 });
 
@@ -377,6 +442,10 @@ function selectCommand(sql) {
 
 }
 aras.route('/upload').post(function (req, res) {
+    let file = req.body.params.ra;
+    if (file) {
+        tblnm = file.split('.').slice(0, -1).join('.');
+    }
     csvfn = 'files/' + req.body.params.ra;
     return new Promise((resolve, reject) => {
         csvHeaders({
@@ -476,10 +545,10 @@ aras.route('/upload').post(function (req, res) {
         })
         .then(context => {
             //context.db.end();
-            res.send({ sucess: "Data Sucessfully uploaded" });
+            res.send({ message: "Data Sucessfully uploaded" });
         })
         .catch(err => {
-            res.send({ error: "Something went wrong" });
+            res.send({ message: (err.stack ? err.stack : "Something went wrong, Please Try Again") });
             console.error("err", err.stack);
         });
 
