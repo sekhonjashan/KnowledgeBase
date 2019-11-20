@@ -63,15 +63,28 @@ export class RAComponent implements OnInit {
         this.queryCollection.push(raQuery.substring(a.pop() + 1, i));
       }
     }
+    // function getIndex(arr , val){
+    //   let flt = false;
+    //   let index = Object.keys(arr).findIndex((it)=>{
+    //     return arr[it]['value'] == val;
+    //   });
+    //   if(index != -1){
+    //     flt = true;
+    //   }
+    //   return flt;
+    // }
     let tableObj = {}
     this.queryCollection.forEach(function (val, i) {
-      tableObj['table' + (i + 1)] = { value: val };
+      //if(!getIndex(tableObj ,val)){
+        tableObj['table' + (i + 1)] = { value: val };
+      //}
     });
+    var tableObjCl = Object.assign({} , tableObj);
     Object.keys(tableObj).forEach((it, j) => {
       Object.keys(tableObj).forEach((itm, k) => {
-        let start = tableObj[it].value, end = tableObj[itm].value;
+        let start = tableObj[it].value, end = tableObjCl[itm].value;
         if (start != end && start.indexOf(end) != -1) {
-          tableObj[it].value = start.replace(end, itm);
+          tableObj[it].value = start.split(end).join(itm);
           tableObj[it].combine = true;
           //  if(tableObj[it].tables){
           //   tableObj[it].tables.push(itm);

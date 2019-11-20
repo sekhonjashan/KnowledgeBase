@@ -54,6 +54,7 @@ function raJoin(res) {
                 })
                 if (flag) {
                     var obj = { ...frItem, ...secItem };
+                    console.log(frItem['annotations'] , secItem['annotations']);
                     if (tab_name == 'multiplicity') {
                         obj['annotations'] = frItem['annotations'] * secItem['annotations'];
                     } else if (tab_name == 'standard') {
@@ -87,7 +88,7 @@ function raJoin(res) {
 // }
 
 function raUnion(res) {
-    console.log(res);
+    console.log(res, 'jsjsjssjsjsjjsjsj');
     var unionCollection = Object.assign([], res[0]);
     res[1].forEach((raData) => {
         console.log(res[0]);
@@ -209,16 +210,16 @@ const queryEvaluation = async (obj, req, res) => {
                         } 
                     }
                 }
-                // let temp = Object.assign([], data);
-                // let collection = [];
-                // temp.forEach((obj) => {
-                //     let idx = isAvailable(collection, obj);
-                //     if (idx == -1) {
-                //         collection.push(obj);
-                //     } else {
-                //         collection[idx]['annotations'] = parseInt(collection[idx]['annotations']) + parseInt(obj["annotations"]);
-                //     }
-                // })
+                let temp = Object.assign([], data);
+                let collection = [];
+                temp.forEach((obj) => {
+                    let idx = isAvailable(collection, obj);
+                    if (idx == -1) {
+                        collection.push(obj);
+                    } else {
+                        collection[idx]['annotations'] = parseInt(collection[idx]['annotations']) + parseInt(obj["annotations"]);
+                    }
+                })
                 res.send(data);
             } catch (ex) {
                 console.log(ex);
