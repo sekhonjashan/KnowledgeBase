@@ -1,101 +1,105 @@
 <div class="row mt-3">
-    <div class="col-md-9">
-        <form  #myForm="ngForm" action="javascript:void(0)">
-            <div class="form-group">
-                <div class="custom-control custom-radio custom-control-inline">
-                    <input type="radio" class="custom-control-input" id="customRadio1" [checked]="true" value="multiplicity" name="ratype" [(ngModel)]="model.ratype" required>
-                    <label class="custom-control-label" for="customRadio1">Bag Semantics</label>
+        <div class="col-md-9">
+            <form  #myForm="ngForm" action="javascript:void(0)">
+                <div class="form-group">
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" class="custom-control-input" id="customRadio1" [checked]="true" value="multiplicity" name="ratype" [(ngModel)]="model.ratype" required>
+                        <label class="custom-control-label" for="customRadio1">Bag Semantics</label>
+                    </div>
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" class="custom-control-input" id="customRadio2" value="probability" name="ratype" [(ngModel)]="model.ratype" required>
+                        <label class="custom-control-label" for="customRadio2">The Probability of t</label>
+                    </div>
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" class="custom-control-input" id="customRadio3" value="certainity" name="ratype" [(ngModel)]="model.ratype" required>
+                        <label class="custom-control-label" for="customRadio3">The Certainity of t</label>
+                    </div>
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" class="custom-control-input" id="customRadio4" value="ploynomial" name="ratype" [(ngModel)]="model.ratype" required>
+                        <label class="custom-control-label" for="customRadio4">Provenance ploynomial</label>
+                    </div>
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" class="custom-control-input" id="customRadio5" value="standard" name="ratype" [(ngModel)]="model.ratype" required>
+                        <label class="custom-control-label" for="customRadio5">Standard Case</label>
+                    </div>
                 </div>
-                <div class="custom-control custom-radio custom-control-inline">
-                    <input type="radio" class="custom-control-input" id="customRadio2" value="probability" name="ratype" [(ngModel)]="model.ratype" required>
-                    <label class="custom-control-label" for="customRadio2">The Probability of t</label>
+                <div class="form-group">
+                    <label for="comment">Relational Algebra:</label>
+                    <textarea class="form-control" rows="5" id="comment"  #ta
+                        placeholder="your query goes here ..."></textarea>
                 </div>
-                <div class="custom-control custom-radio custom-control-inline">
-                    <input type="radio" class="custom-control-input" id="customRadio3" value="certainity" name="ratype" [(ngModel)]="model.ratype" required>
-                    <label class="custom-control-label" for="customRadio3">The Certainity of t</label>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary float-right" (click)="submitQuery(ta)">
+                        <span class="spinner-border spinner-border-sm" *ngIf="isFetching" role="status"
+                            aria-hidden="true"></span>
+                        {{ isFetching ?  'fetching' : 'submit'}}
+                    </button>
                 </div>
-                <div class="custom-control custom-radio custom-control-inline">
-                    <input type="radio" class="custom-control-input" id="customRadio4" value="ploynomial" name="ratype" [(ngModel)]="model.ratype" required>
-                    <label class="custom-control-label" for="customRadio4">Provenance ploynomial</label>
-                </div>
-                <div class="custom-control custom-radio custom-control-inline">
-                    <input type="radio" class="custom-control-input" id="customRadio5" value="standard" name="ratype" [(ngModel)]="model.ratype" required>
-                    <label class="custom-control-label" for="customRadio5">Standard Case</label>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="comment">Relational Algebra:</label>
-                <textarea class="form-control" rows="5" id="comment"  #ta
-                    placeholder="your query goes here ..."></textarea>
-            </div>
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary float-right" (click)="submitQuery(ta)">
-                    <span class="spinner-border spinner-border-sm" *ngIf="isFetching" role="status"
-                        aria-hidden="true"></span>
-                    {{ isFetching ?  'fetching' : 'submit'}}
-                </button>
-            </div>
-        </form>
-        <div class="row">
-            <div class="col mt-3">
-                <div class="alert alert-warning" *ngIf="!ta.value.length && isEmpty">
-                    Please enter Relational Algebra Query!
-                </div>
-                <div class="alert alert-warning" *ngIf="isImplemented">
-                    {{model.ratype}} functionality is not yet implemented, Please try with multiplicity and (0 or 1 standard functionality)
-                </div>
-                <div class="alert alert-danger" *ngIf="response?.message && ta.value.length">
-                    {{response.message}}
+            </form>
+            <div class="row">
+                <div class="col mt-3">
+                    <div class="alert alert-warning" *ngIf="!ta.value.length && isEmpty">
+                        Please enter Relational Algebra Query!
+                    </div>
+                    <div class="alert alert-warning" *ngIf="isImplemented">
+                        {{model.ratype}} functionality is not yet implemented, Please try with multiplicity and (0 or 1 standard functionality)
+                    </div>
+                    <div class="alert alert-danger" *ngIf="response?.message && ta.value.length">
+                        {{response.message}}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <h5>Currently, the following operations are supported</h5>
-        <ul class="mt-3">
-            <li>Projection: <span class="badge badge-secondary">project{{'{'}}a,b{{'}'}}[A], π{{'{'}}a,b{{'}'}}[A]</span></li>
-            <li>Selection: <span class="badge badge-secondary">select{{'{'}}condition{{'}'}}[A], σ{{'{'}}condition{{'}'}}[A]</span>
-            </li>
-            <li>Natural Join: <span class="badge badge-secondary">(A natjoin B), (A ⋈ B)</span></li>
-            <li>Union: <span class="badge badge-secondary">(A union B), (A ∪ B)</span></li>
-        </ul>
-    </div>
-    <!-- (π<a,c>[((π<a,b>[R] natjoin π<b,c>[R]) U (π<a,c>[R] natjoin π<b,c>[R]))]) -->
-    <div class="row col-md-12"><b>Sample Query</b> : π{{'{'}}a,c{{'}'}}[((π{{'{'}}a,b{{'}'}}[R] natjoin π{{'{'}}b,c{{'}'}}[R]) ∪ (π{{'{'}}a,c{{'}'}}[R] natjoin
-        π{{'{'}}b,c{{'}'}}[R]))]</div>
+        <div class="col-md-3">
+            <h5>Currently, the following operations are supported</h5>
+            <ul class="mt-3">
+                <li>Projection: <span class="badge badge-secondary">project{{'{'}}a,b{{'}'}}[A], π{{'{'}}a,b{{'}'}}[A]</span></li>
+                <li>Selection: <span class="badge badge-secondary">select{{'{'}}condition{{'}'}}[A], σ{{'{'}}condition{{'}'}}[A]</span>
+                </li>
+                <li>Natural Join: <span class="badge badge-secondary">(A natjoin B), (A ⋈ B)</span></li>
+                <li>Union: <span class="badge badge-secondary">(A union B), (A ∪ B)</span></li>
+            </ul>
+        </div>
+        <!-- (π<a,c>[((π<a,b>[R] natjoin π<b,c>[R]) U (π<a,c>[R] natjoin π<b,c>[R]))]) -->
+        <div class="row col-md-12"><b>Sample Query</b> : π{{'{'}}a,c{{'}'}}[((π{{'{'}}a,b{{'}'}}[R] natjoin π{{'{'}}b,c{{'}'}}[R]) union (π{{'{'}}a,c{{'}'}}[R] natjoin
+            π{{'{'}}b,c{{'}'}}[R]))]</div>
+    
+        <div class="row col-md-12"> project{{'{'}}a,d{{'}'}}[((project{{'{'}}a,b,c{{'}'}}[R] natjoin project{{'{'}}c,d{{'}'}}[R]) union
+            (project{{'{'}}a,b,c,d{{'}'}}[R]))]</div>
+    
+        <div class="col-md-12"><b>Standard Query</b>
+            ((project{{'{'}}staff_id, store_id{{'}'}}[second]) ⋈ (project{{'{'}}first_name, store_id{{'}'}}[(select{{'{'}}store_id&gt;=2{{'}'}}[second])])) ∪ (project{{'{'}}last_name{{'}'}}[(select{{'{'}}manager_id&lt; 4{{'}'}}[second])])
+        </div>
 
-    <div class="row col-md-12"> project{{'{'}}a,d{{'}'}}[((project{{'{'}}a,b,c{{'}'}}[R] natjoin project{{'{'}}c,d{{'}'}}[R]) ∪
-        (project{{'{'}}a,b,c,d{{'}'}}[R]))]</div>
-
-    <div class="col-md-12"><b>Standard Query</b>
-        ((project{{'{'}}staff_id, store_id{{'}'}}[second]) ⋈ (project{{'{'}}first_name, store_id{{'}'}}[(select{{'{'}}store_id&gt;=2{{'}'}}[second])])) ∪ (project{{'{'}}last_name{{'}'}}[(select{{'{'}}manager_id&lt; 4{{'}'}}[second])])
-    </div>
-</div>
-<div class="row">
-    <!-- <div class="col mt-3">
-        <div class="alert alert-warning" *ngIf="!ta.value.length && initial">
-            Please enter Relational Algebra Query!
-        </div>
-        <div class="alert alert-danger" *ngIf="response?.error">
-            {{response.error.code}}
-            <span *ngIf="response?.error?.sqlMessage"> "{{response?.error?.sqlMessage}}"</span>
-        </div>
-    </div> -->
-    <div class="col-md-12">
-        <table class="table table-bordered mt-3" *ngIf="response.length">
-            <thead>
-                <tr>
-                    <th *ngFor="let hr of getKeys(response[0], true)">{{hr}}</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let data of response">
-                    <td *ngFor="let td of getKeys(response[0], false)">{{data[td]}}</td>
-                </tr>
-            </tbody>
-        </table>
-        <div class="alert alert-warning mt-3" *ngIf="noData">
-            No data found with requested Query!.
+        <div class="col-md-12"><b>Lipsky Test case</b>
+            project{{'{'}}a,c{{'}'}}[(project{{'{'}}a,b{{'}'}}[lipsky] natjoin project{{'{'}}b,c{{'}'}}[lipsky]) union (project{{'{'}}a,c{{'}'}}[lipsky] natjoin project{{'{'}}b,c{{'}'}}[lipsky])]
         </div>
     </div>
-</div>
+    <div class="row">
+        <!-- <div class="col mt-3">
+            <div class="alert alert-warning" *ngIf="!ta.value.length && initial">
+                Please enter Relational Algebra Query!
+            </div>
+            <div class="alert alert-danger" *ngIf="response?.error">
+                {{response.error.code}}
+                <span *ngIf="response?.error?.sqlMessage"> "{{response?.error?.sqlMessage}}"</span>
+            </div>
+        </div> -->
+        <div class="col-md-12">
+            <table class="table table-bordered mt-3" *ngIf="response.length">
+                <thead>
+                    <tr>
+                        <th *ngFor="let hr of getKeys(response[0], true)">{{hr}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let data of response">
+                        <td *ngFor="let td of getKeys(response[0], false)">{{data[td]}}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="alert alert-warning mt-3" *ngIf="noData">
+                No data found with requested Query!.
+            </div>
+        </div>
+    </div>
