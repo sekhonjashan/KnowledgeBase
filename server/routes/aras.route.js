@@ -54,7 +54,6 @@ function raJoin(res) {
                 })
                 if (flag) {
                     var obj = { ...frItem, ...secItem };
-                    console.log(frItem['annotations'] , secItem['annotations']);
                     if (tab_name == 'multiplicity') {
                         obj['annotations'] = frItem['annotations'] * secItem['annotations'];
                     } else if (tab_name == 'standard') {
@@ -68,27 +67,8 @@ function raJoin(res) {
     }
     return joinCollection;
 }
-
-// unionAlltheValues() {
-//   this.responseOne.forEach((val, i) => {
-//     val.count = 1;
-//   });
-//   var unionAll = Object.assign([], this.responseOne);
-//   this.responseTwo.forEach((item, i) => {
-//     var temp = Object.assign({}, item);
-//     let idx = this.isAvailable(unionAll, temp);
-//     if (idx == -1) {
-//       temp.count = 1;
-//       unionAll.push(temp);
-//     } else {
-//       unionAll[idx].count += 1;
-//     }
-//   });
-//   this.filedsEvaluation(unionAll);
-// }
-
 function raUnion(res) {
-    console.log(res, 'jsjsjssjsjsjjsjsj');
+    console.log("unionnnnnnnnnnnnnnn");
     var unionCollection = Object.assign([], res[0]);
     res[1].forEach((raData) => {
         console.log(res[0]);
@@ -130,195 +110,166 @@ const getQueryData = (sql, res) => {
         })
     });
 }
+const nestedQueryEvaluation = async (res, nestedQuery, symbol, val) => {
+    var results = [];
+    for (let j = 0; j < nestedQuery.length; j++) {
+        nestedQuery[j] = nestedQuery[j].indexOf('σ') != -1 ? nestedQuery[j].replace(/,annotations/gi, "") : nestedQuery[j];
+        let sql = raToSql.getSql(nestedQuery[j]);
+        const data = await getQueryData(sql, res);
+        results.push(data);
+    }
+    let report;
+    if (symbol) {
+        report = (symbol == '⋈') ? raJoin(results) : raUnion(results);
+    } else {
+        report = results[0];
+    }
+    if (report && report.length) {
+        var message = await dataInsertion(val, report);
+    }
+    return report;
+}
 const queryEvaluation = async (obj, req, res) => {
     var frt = Object.keys(obj);
     for (let index = 0; index < frt.length; index++) {
-        let val = frt[index];
-        if (obj[val].isApi && !obj[val].final && obj[val].symbol) {
-            var nestedQuery = obj[val].value.split(obj[val].symbol);
-            var results = [];
-            for (let j = 0; j < nestedQuery.length; j++) {
-                try {
-                    nestedQuery[j] = nestedQuery[j].indexOf('σ') != -1 ? nestedQuery[j].replace(/,annotations/gi, "") : nestedQuery[j];
-                    let sql = raToSql.getSql(nestedQuery[j]);
-                    const data = await getQueryData(sql, res);
-                    results.push(data)
-                    if (j === nestedQuery.length - 1) {
-                        if (obj[val].symbol == '⋈') {
-                            obj[val].results = raJoin(results);
-                        } else {
-                            obj[val].results = raUnion(results);
-                        }
-                        if (obj[val].results && obj[val].results.length) {
-                            var message = await dataInsertion(val, obj[val].results);
-                            console.log(message);
-                        }
-                    }
-                    console.log(index, 'indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
-                }
-                catch (ex) {
-                    console.log(ex);
-                    res.send({
-                        message: "Query is Invalid, Please Try with valid Relation Algebra Query"
-                    });
-                }
-            }
-        } else if (obj[val].isApi && !obj[val].final && !obj[val].symbol) {
-            try {
-                obj[val].value = obj[val].value.indexOf('σ') != -1 ? obj[val].value.replace(/,annotations/gi, "") : obj[val].value;
-                sql = raToSql.getSql(obj[val].value);
-                obj[val].results = await getQueryData(sql, res)
-                var message = await dataInsertion(val, obj[val].results);
-                console.log(message);
-            } catch (ex) {
-                console.log(ex);
-                res.send({
-                    message: "Query is Invalid, Please Try with valid Relation Algebra Query"
-                });
-            }
-        } else if (obj[val].final) {
-            try {
-                console.log(obj[val].value, 'obj[val].value obj[val].value obj[val].value obj[val].value obj[val].value');
-                let data;
-                if (obj[val].value && (obj[val].value.indexOf('σ') != -1 || obj[val].value.indexOf('π') != -1) || (frt.length == 1 && (obj[val].value.indexOf('⋈') == -1 && obj[val].value.indexOf('∪') == -1))) {
-                    obj[val].value = obj[val].value.indexOf('σ') != -1 ? obj[val].value.replace(/,annotations/gi, "") : obj[val].value;
-                    sql = raToSql.getSql(obj[val].value);
-                    data = await getQueryData(sql, res);
-                } else {
-                    let nestedQuery = obj[val].value.split(obj[val].symbol);
-                    nestedQuery = nestedQuery.map((val) => {
-                        return val.replace(/\(|\)/g, '');
-                    });
-                    console.log(nestedQuery,nestedQuery,nestedQuery,nestedQuery);
-                    if (obj[val].symbol == '⋈' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
-                        data = raJoin([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-                    } else if (obj[val].symbol == '∪' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
-                        data = raUnion([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-                    } else {
-                        let dataResult = [];
-                        for(let m = 0; m < nestedQuery.length ; m++){
-                        //nestedQuery.forEach((val) => {
-                            let sql = raToSql.getSql(nestedQuery[m]);
-                            const reslt = await getQueryData(sql, res);
-                            dataResult.push(reslt)
-                        //});
-                        }
-                        if(obj[val].symbol == '⋈'){
-                            data = raJoin(dataResult);
-                        }else{
-                            data = raJoin(dataResult);
-                        } 
-                    }
-                }
-                let temp = Object.assign([], data);
+        try {
+            let val = frt[index];
+            var nestedQuery = obj[val].symbol ? obj[val].value.split(obj[val].symbol) : [obj[val].value];
+            obj[val].results = await nestedQueryEvaluation(res, nestedQuery, obj[val].symbol, val);
+            if (obj[val].final) {
+                let temp = Object.assign([], obj[val].results);
                 let collection = [];
                 temp.forEach((obj) => {
                     let idx = isAvailable(collection, obj);
                     if (idx == -1) {
                         collection.push(obj);
                     } else {
-                        collection[idx]['annotations'] = parseInt(collection[idx]['annotations']) + parseInt(obj["annotations"]);
+                        if (tab_name == 'multiplicity') {
+                            collection[idx]['annotations'] = parseInt(collection[idx]['annotations']) + parseInt(obj['annotations']);
+                        } else if (tab_name == 'standard') {
+                            collection[idx]['annotations'] = logicalDisjunction(parseInt(collection[idx]['annotations']), parseInt(obj['annotations']));
+                        }
                     }
-                })
-                res.send(data);
-            } catch (ex) {
-                console.log(ex);
-                res.send({
-                    message: "Query is Invalid, Please Try with valid Relation Algebra Query"
                 });
+                res.send(collection);
             }
-        } else {
-            // let nestedQuery = obj[val].value.split(obj[val].symbol);
-            // nestedQuery = nestedQuery.map((val) => {
-            //     return val.replace(/\(|\)/g, '');
-            // });
-            // if (obj[val].symbol == '⋈') {
-            //     obj[val].results = raJoin([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-            // } else {
-            //     obj[val].results = raUnion([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-            // }
-
-            let nestedQuery = obj[val].value.split(obj[val].symbol);
-            nestedQuery = nestedQuery.map((val) => {
-                return val.replace(/\(|\)/g, '');
+        } catch (ex) {
+            res.send({
+                message: "Query is Invalid, Please Try with valid Relation Algebra Query"
             });
-            console.log(nestedQuery,nestedQuery,nestedQuery,nestedQuery);
-            if (obj[val].symbol == '⋈' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
-                obj[val].results = raJoin([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-            } else if (obj[val].symbol == '∪' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
-                obj[val].results = raUnion([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-            } else {
-                let dataResult = [];
-                for(let m = 0; m < nestedQuery.length ; m++){
-                //nestedQuery.forEach((val) => {
-                    let sql = raToSql.getSql(nestedQuery[m]);
-                    const reslt = await getQueryData(sql, res);
-                    dataResult.push(reslt)
-                //});
-                }
-                if(obj[val].symbol == '⋈'){
-                    obj[val].results = dataResult.length > 1 ? raJoin(dataResult) : dataResult[0];
-                }else{
-                    obj[val].results =  dataResult.length > 1 ? raJoin(dataResult) : dataResult[0];
-                } 
-            }
-            if (obj[val].results && obj[val].results.length) {
-                var message = await dataInsertion(val, obj[val].results);
-                console.log(message);
-            }
         }
+        // if (obj[val].isApi && !obj[val].final && obj[val].symbol) {
+        //     var nestedQuery = obj[val].value.split(obj[val].symbol);
+        //     obj[val].results =  await nestedQueryEvaluation(res, nestedQuery, obj[val].symbol, val);
+
+        // } else if (obj[val].isApi && !obj[val].final && !obj[val].symbol) {
+        //     try {
+        //         obj[val].value = obj[val].value.indexOf('σ') != -1 ? obj[val].value.replace(/,annotations/gi, "") : obj[val].value;
+        //         sql = raToSql.getSql(obj[val].value);
+        //         obj[val].results = await getQueryData(sql, res)
+        //         var message = await dataInsertion(val, obj[val].results);
+        //         console.log(message);
+        //     } catch (ex) {
+        //         console.log(ex);
+        //         res.send({
+        //             message: "Query is Invalid, Please Try with valid Relation Algebra Query"
+        //         });
+        //     }
+        // } else if (obj[val].final) {
+        //     try {
+        //         console.log(obj[val].value, 'obj[val].value obj[val].value obj[val].value obj[val].value obj[val].value');
+        //         let data;
+        //         //if (obj[val].value && (obj[val].value.indexOf('σ') != -1 || obj[val].value.indexOf('π') != -1) || (frt.length == 1 && (obj[val].value.indexOf('⋈') == -1 && obj[val].value.indexOf('∪') == -1))) {
+        //         let symols = ['⋈','∪'];    
+        //         if (symols.indexOf(obj[val].symbol) == -1) {
+        //             obj[val].value = obj[val].value.indexOf('σ') != -1 ? obj[val].value.replace(/,annotations/gi, "") : obj[val].value;
+        //             sql = raToSql.getSql(obj[val].value);
+        //             data = await getQueryData(sql, res);
+        //         } else {
+        //             let nestedQuery = obj[val].value.split(obj[val].symbol);
+        //             nestedQuery = nestedQuery.map((val) => {
+        //                 return val.replace(/\(|\)/g, '');
+        //             });
+        //             console.log(nestedQuery,nestedQuery,nestedQuery,nestedQuery);
+        //             if (obj[val].symbol == '⋈' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
+        //                 data = raJoin([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
+        //             } else if (obj[val].symbol == '∪' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
+        //                 data = raUnion([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
+        //             } else {
+        //                 let dataResult = [];
+        //                 for(let m = 0; m < nestedQuery.length ; m++){
+        //                 //nestedQuery.forEach((val) => {
+        //                     let sql = raToSql.getSql(nestedQuery[m]);
+        //                     const reslt = await getQueryData(sql, res);
+        //                     dataResult.push(reslt)
+        //                 //});
+        //                 }
+        //                 if(obj[val].symbol == '⋈'){
+        //                     data = raJoin(dataResult);
+        //                 }else{
+        //                     data = raJoin(dataResult);
+        //                 } 
+        //             }
+        //         }
+        //         let temp = Object.assign([], data);
+        //         let collection = [];
+        //         temp.forEach((obj) => {
+        //             let idx = isAvailable(collection, obj);
+        //             if (idx == -1) {
+        //                 collection.push(obj);
+        //             } else {
+        //                 collection[idx]['annotations'] = parseInt(collection[idx]['annotations']) + parseInt(obj["annotations"]);
+        //             }
+        //         })
+        //         res.send(data);
+        //     } catch (ex) {
+        //         console.log(ex);
+        //         res.send({
+        //             message: "Query is Invalid, Please Try with valid Relation Algebra Query"
+        //         });
+        //     }
+        // } else {
+        //     // let nestedQuery = obj[val].value.split(obj[val].symbol);
+        //     // nestedQuery = nestedQuery.map((val) => {
+        //     //     return val.replace(/\(|\)/g, '');
+        //     // });
+        //     // if (obj[val].symbol == '⋈') {
+        //     //     obj[val].results = raJoin([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
+        //     // } else {
+        //     //     obj[val].results = raUnion([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
+        //     // }
+
+        //     let nestedQuery = obj[val].value.split(obj[val].symbol);
+        //     nestedQuery = nestedQuery.map((val) => {
+        //         return val.replace(/\(|\)/g, '');
+        //     });
+        //     console.log(nestedQuery,nestedQuery,nestedQuery,nestedQuery);
+        //     if (obj[val].symbol == '⋈' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
+        //         obj[val].results = raJoin([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
+        //     } else if (obj[val].symbol == '∪' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
+        //         obj[val].results = raUnion([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
+        //     } else {
+        //         let dataResult = [];
+        //         for(let m = 0; m < nestedQuery.length ; m++){
+        //         //nestedQuery.forEach((val) => {
+        //             let sql = raToSql.getSql(nestedQuery[m]);
+        //             const reslt = await getQueryData(sql, res);
+        //             dataResult.push(reslt)
+        //         //});
+        //         }
+        //         if(obj[val].symbol == '⋈'){
+        //             obj[val].results = dataResult.length > 1 ? raJoin(dataResult) : dataResult[0];
+        //         }else{
+        //             obj[val].results =  dataResult.length > 1 ? raJoin(dataResult) : dataResult[0];
+        //         } 
+        //     }
+        //     if (obj[val].results && obj[val].results.length) {
+        //         var message = await dataInsertion(val, obj[val].results);
+        //         console.log(message);
+        //     }
+        // }
     }
 
-    function dataInsertion(tblnm, data) {
-        console.log('insertion is started');
-        console.log(tblnm, data);
-        let fieldnms = Object.keys(data[0]).sort().join(",")
-        let fields = Object.keys(data[0]).sort().map((rep) => {
-            return rep + ' TEXT';
-        });
-        fields = fields.join(",");
-        let values = [];
-        data.forEach((obj) => {
-            let arr = [];
-            Object.keys(data[0]).sort().forEach((val) => {
-                arr.push(obj[val]);
-            });
-            values.push(arr);
-        });
-        console.log(values);
-        return new Promise((resolve, rej) => {
-            let context = { db: dbcon };
-            context.db.query(`DROP TABLE IF EXISTS ${tblnm}`,
-                [],
-                err => {
-                    if (err) reject(err);
-                    else resolve(context);
-                })
-        }).then(context => {
-            return new Promise((resolve, rej) => {
-                console.log(`CREATE TABLE IF NOT EXISTS ${tblnm}(${fields} )`);
-                context.db.query(`CREATE TABLE IF NOT EXISTS ${tblnm}(${fields})`,
-                    [],
-                    err => {
-                        if (err) rej(err);
-                        else resolve(context);
-                    });
-            });
-        }).then((context) => {
-            return new Promise((resolve, rej) => {
-                var sql = `INSERT INTO ${tblnm} ( ${fieldnms} ) VALUES ?`;
-                context.db.query(sql, [values],
-                    err => {
-                        if (err) { console.error(err); }
-                        else setTimeout(() => {
-                            resolve(true);
-                        });
-                    });
-            });
-        }).catch((err) => {
-            console.log(err);
-        })
-    }
     // Object.keys(obj).forEach((val) => {
     //     var results = [];
     //     if (obj[val].isApi && !obj[val].final) {
@@ -351,6 +302,57 @@ const queryEvaluation = async (obj, req, res) => {
     //         // });
     //     }
     // });
+}
+
+function dataInsertion(tblnm, data) {
+    console.log('insertion is started');
+    console.log(tblnm, data);
+    let fieldnms = Object.keys(data[0]).sort().join(",")
+    let fields = Object.keys(data[0]).sort().map((rep) => {
+        return rep + ' TEXT';
+    });
+    fields = fields.join(",");
+    let values = [];
+    data.forEach((obj) => {
+        let arr = [];
+        Object.keys(data[0]).sort().forEach((val) => {
+            arr.push(obj[val]);
+        });
+        values.push(arr);
+    });
+    console.log(values);
+    return new Promise((resolve, rej) => {
+        let context = { db: dbcon };
+        context.db.query(`DROP TABLE IF EXISTS ${tblnm}`,
+            [],
+            err => {
+                if (err) reject(err);
+                else resolve(context);
+            })
+    }).then(context => {
+        return new Promise((resolve, rej) => {
+            console.log(`CREATE TABLE IF NOT EXISTS ${tblnm}(${fields} )`);
+            context.db.query(`CREATE TABLE IF NOT EXISTS ${tblnm}(${fields})`,
+                [],
+                err => {
+                    if (err) rej(err);
+                    else resolve(context);
+                });
+        });
+    }).then((context) => {
+        return new Promise((resolve, rej) => {
+            var sql = `INSERT INTO ${tblnm} ( ${fieldnms} ) VALUES ?`;
+            context.db.query(sql, [values],
+                err => {
+                    if (err) { console.error(err); }
+                    else setTimeout(() => {
+                        resolve(true);
+                    });
+                });
+        });
+    }).catch((err) => {
+        console.log(err);
+    })
 }
 
 // function getMutiplicity(obj, req, res) {

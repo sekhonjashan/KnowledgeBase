@@ -61,14 +61,14 @@
         </ul>
     </div>
     <!-- (π<a,c>[((π<a,b>[R] natjoin π<b,c>[R]) U (π<a,c>[R] natjoin π<b,c>[R]))]) -->
-    <div class="row col-md-12"><b>Sample Query</b> : π{{'{'}}a,c{{'}'}}[((π{{'{'}}a,b{{'}'}}[R] natjoin π{{'{'}}b,c{{'}'}}[R]) U (π{{'{'}}a,c{{'}'}}[R] natjoin
+    <div class="row col-md-12"><b>Sample Query</b> : π{{'{'}}a,c{{'}'}}[((π{{'{'}}a,b{{'}'}}[R] natjoin π{{'{'}}b,c{{'}'}}[R]) ∪ (π{{'{'}}a,c{{'}'}}[R] natjoin
         π{{'{'}}b,c{{'}'}}[R]))]</div>
 
-    <div class="row col-md-12"> project{{'{'}}a,d{{'}'}}[((project{{'{'}}a,b,c{{'}'}}[R] natjoin project{{'{'}}c,d{{'}'}}[R]) U
+    <div class="row col-md-12"> project{{'{'}}a,d{{'}'}}[((project{{'{'}}a,b,c{{'}'}}[R] natjoin project{{'{'}}c,d{{'}'}}[R]) ∪
         (project{{'{'}}a,b,c,d{{'}'}}[R]))]</div>
 
     <div class="col-md-12"><b>Standard Query</b>
-        ((project{{'{'}}staff_id, store_id{{'}'}}[second]) ⋈ (project{{'{'}}first_name, store_id{{'}'}}[(select{{'{'}}store_id&gt;=2{{'}'}}[second])])) U (project{{'{'}}last_name{{'}'}}[(select{{'{'}}manager_id&lt; 4{{'}'}}[second])])
+        ((project{{'{'}}staff_id, store_id{{'}'}}[second]) ⋈ (project{{'{'}}first_name, store_id{{'}'}}[(select{{'{'}}store_id&gt;=2{{'}'}}[second])])) ∪ (project{{'{'}}last_name{{'}'}}[(select{{'{'}}manager_id&lt; 4{{'}'}}[second])])
     </div>
 </div>
 <div class="row">
@@ -85,14 +85,17 @@
         <table class="table table-bordered mt-3" *ngIf="response.length">
             <thead>
                 <tr>
-                    <th *ngFor="let hr of getKeys(response[0])">{{hr}}</th>
+                    <th *ngFor="let hr of getKeys(response[0], true)">{{hr}}</th>
                 </tr>
             </thead>
             <tbody>
                 <tr *ngFor="let data of response">
-                    <td *ngFor="let td of getKeys(data)">{{data[td]}}</td>
+                    <td *ngFor="let td of getKeys(response[0], false)">{{data[td]}}</td>
                 </tr>
             </tbody>
         </table>
+        <div class="alert alert-warning mt-3" *ngIf="noData">
+            No data found with requested Query!.
+        </div>
     </div>
 </div>

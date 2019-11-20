@@ -17,7 +17,9 @@ export class RAComponent implements OnInit {
   response = [];
   isFetching = false;
   isEmpty = false;
+  noData = false;
   special_case = "0987654321";
+  tbl_keys;
   ngOnInit() {
   }
 
@@ -31,6 +33,7 @@ export class RAComponent implements OnInit {
     console.log(this.model);
     this.response = [];
     this.isEmpty = false;
+    this.noData = false;
     if ((this.model.ratype == 'multiplicity' || this.model.ratype == 'standard')) {
       this.isImplemented = false;
     } else {
@@ -51,7 +54,7 @@ export class RAComponent implements OnInit {
       "natjoin": "⋈",
       "_": this.special_case
     };
-    raQuery = this.queryEvluation(raQuery, /project|select|union|natjoin|∪|_/gi, mapObj);
+    raQuery = this.queryEvluation(raQuery, /project|select|union|natjoin|_/gi, mapObj);
     raQuery = raQuery.replace(/\s/g, '')
     var a = [];
     this.queryCollection = [];
@@ -76,10 +79,10 @@ export class RAComponent implements OnInit {
     let tableObj = {}
     this.queryCollection.forEach(function (val, i) {
       //if(!getIndex(tableObj ,val)){
-        tableObj['table' + (i + 1)] = { value: val };
+      tableObj['table' + (i + 1)] = { value: val };
       //}
     });
-    var tableObjCl = Object.assign({} , tableObj);
+    var tableObjCl = Object.assign({}, tableObj);
     Object.keys(tableObj).forEach((it, j) => {
       Object.keys(tableObj).forEach((itm, k) => {
         let start = tableObj[it].value, end = tableObjCl[itm].value;
@@ -114,13 +117,13 @@ export class RAComponent implements OnInit {
         "}": ",annotations]",
       };
       tableObj[val]['value'] = this.queryEvluation(tableObj[val]['value'], /\[|\]|{|}/gi, mapObj);
-      tableObj[val]['isApi'] = tableObj[val]['value'].indexOf('π') != -1 ? true : false;
-      tableObj[val]['isApi'] = tableObj[val]['value'].indexOf('σ') != -1 ? true : tableObj[val]['isApi'];
+      // tableObj[val]['isApi'] = tableObj[val]['value'].indexOf('π') != -1 ? true : false;
+      // tableObj[val]['isApi'] = tableObj[val]['value'].indexOf('σ') != -1 ? true : tableObj[val]['isApi'];
       tableObj[val]['symbol'] = tableObj[val]['value'].indexOf('⋈') != -1 ? '⋈' : '';
       tableObj[val]['symbol'] = tableObj[val]['value'].indexOf('∪') != -1 ? '∪' : tableObj[val]['symbol'];
     });
     if (Object.keys(tableObj).length == 1 && !tableObj["table1"].symbol.length) {
-      tableObj["table1"]["isApi"] = true;
+      // tableObj["table1"]["isApi"] = true;
       tableObj["table1"]['final'] = true;
     }
     var params = {
@@ -133,6 +136,9 @@ export class RAComponent implements OnInit {
       this.isFetching = false;
       this.response = res ? res : [];
       console.log(res);
+      if(!this.response.length){
+        this.noData = true;
+      }
       // this.response = [];
       // this.response = res;
     }, function (err) {
@@ -140,14 +146,20 @@ export class RAComponent implements OnInit {
     });
     console.log(tableObj);
   }
-  getKeys(obj) {
-    let fields = Object.keys(obj).sort();
-    let idx = fields.indexOf('annotations');
-    if (idx != -1) {
-      let temp = fields[idx];
-      fields.splice(idx, 1);
-      fields.push(temp);
+  getKeys(obj, flag) {
+    if(flag){
+      let keys = [];
+      this.response.forEach((val)=>{
+        keys = keys.concat(Object.keys(val));
+      });
+      this.tbl_keys = [...new Set(keys)];
+      let idx = this.tbl_keys.indexOf('annotations');
+      if (idx != -1) {
+        let temp = this.tbl_keys[idx];
+        this.tbl_keys.splice(idx, 1);
+        this.tbl_keys.push(temp);
+      }
     }
-    return fields;
+    return this.tbl_keys;
   }
 }
