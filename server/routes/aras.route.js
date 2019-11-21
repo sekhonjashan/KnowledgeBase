@@ -151,6 +151,15 @@ const queryEvaluation = async (obj, req, res) => {
                         }
                     }
                 });
+                if (tab_name == 'standard') {
+                    var colList = [];
+                    collection.forEach((itm) => {
+                        if (+itm['annotations'] == 1 || +itm['annotations'] > 0) {
+                            colList.push(itm);
+                        }
+                    });
+                    collection = colList;
+                }
                 res.send(collection);
             }
         } catch (ex) {
