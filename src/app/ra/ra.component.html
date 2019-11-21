@@ -60,15 +60,20 @@
                 <li>Union: <span class="badge badge-secondary">(A union B), (A ∪ B)</span></li>
             </ul>
         </div>
+        <div>
         <!-- (π<a,c>[((π<a,b>[R] natjoin π<b,c>[R]) U (π<a,c>[R] natjoin π<b,c>[R]))]) -->
-        <div class="row col-md-12"><b>Sample Query</b> : π{{'{'}}a,c{{'}'}}[((π{{'{'}}a,b{{'}'}}[R] natjoin π{{'{'}}b,c{{'}'}}[R]) union (π{{'{'}}a,c{{'}'}}[R] natjoin
-            π{{'{'}}b,c{{'}'}}[R]))]</div>
+        <div class="row col-md-12"><b>Some of the sample Queries are as below :- </b> 
+        </div>
+        <div class="col-md-12"><b>Sample Query</b> : π{{'{'}}a,c{{'}'}}[((π{{'{'}}a,b{{'}'}}[R] natjoin π{{'{'}}b,c{{'}'}}[R]) union (π{{'{'}}a,c{{'}'}}[R] natjoin
+            π{{'{'}}b,c{{'}'}}[R]))]
+        </div>
     
-        <div class="row col-md-12"> project{{'{'}}a,d{{'}'}}[((project{{'{'}}a,b,c{{'}'}}[R] natjoin project{{'{'}}c,d{{'}'}}[R]) union
+        <div class="col-md-12"> project{{'{'}}a,d{{'}'}}[((project{{'{'}}a,b,c{{'}'}}[R] natjoin project{{'{'}}c,d{{'}'}}[R]) union
             (project{{'{'}}a,b,c,d{{'}'}}[R]))]</div>
     
         <div class="col-md-12"><b>Standard Query</b>
             ((project{{'{'}}staff_id, store_id{{'}'}}[second]) ⋈ (project{{'{'}}first_name, store_id{{'}'}}[(select{{'{'}}store_id&gt;=2{{'}'}}[second])])) ∪ (project{{'{'}}last_name{{'}'}}[(select{{'{'}}manager_id&lt; 4{{'}'}}[second])])
+        </div>
         </div>
 
         <div class="col-md-12"><b>Lipsky Test case</b>
