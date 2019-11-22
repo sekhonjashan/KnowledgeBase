@@ -1,18 +1,17 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-
+import { HttpClientModule } from '@angular/common/http'
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { FileUploadComponent } from './file-upload/file-upload.component';
-import { ArasService } from './services/aras.service';
-import { HttpClientModule } from '@angular/common/http';
+import { UploadComponent } from './upload/upload.component';
 import { RAComponent } from './ra/ra.component';
+import { ArasService } from './services/aras.service'
 import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
     AppComponent,
-    FileUploadComponent,
+    UploadComponent,
     RAComponent
   ],
   imports: [

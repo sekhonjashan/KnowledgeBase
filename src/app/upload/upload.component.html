@@ -6,12 +6,12 @@
         <form method="post" action="#" id="#">
             <div class="form-group files">
                 <label>Upload Your File </label>
-                <input type="file" class="form-control" (change)="handleFileInput($event.target.files)">
+                <input type="file" class="form-control" #upload (change)="fileValidation($event.target)">
             </div>
         </form>
     </div>
     <div class="col-md-12">
-        <button class="btn btn-primary float-right" (click)="uploadFile()" [disabled]="isUploaded">Upload</button>
+        <button class="btn btn-primary float-right" (click)="uploadFile(upload)" [disabled]="isUploaded">Upload</button>
     </div>
     <div class="col mt-3">
         <div class="alert alert-danger" *ngIf="isFileSlected">
@@ -19,6 +19,9 @@
         </div>
         <div class="alert alert-primary" *ngIf="uploadStatus">
             {{fileStaus?.message}}
-            </div>
+        </div>
+        <div class="alert alert-danger" *ngIf="isValidFormat">
+            "{{fileInfo.name}}" file is not allowed, please upload valid file.
+        </div>
     </div>
 </div>

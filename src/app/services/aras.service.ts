@@ -15,6 +15,6 @@ export class ArasService {
     }
 
     op_mutliplicity(obj) {
-        return this.http.get("http://localhost:4000/multiplicity", { params: { ra: JSON.stringify(obj) } });
+        return this.http.get("http://localhost:4000/provenance_semirings", { params: { ra: JSON.stringify(obj) } });
     }
 }

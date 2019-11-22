@@ -29,12 +29,24 @@ export class RAComponent implements OnInit {
     });
     return str;
   }
+  clear(ele) {
+    ele.value = "";
+    this.model = {
+      ratype: 'multiplicity'
+    };
+    this.response = [];
+    this.isImplemented = false;
+    this.isFetching = false;
+    this.isEmpty = false;
+    this.noData = false;
+    return;
+  }
   submitQuery(ele) {
     console.log(this.model);
     this.response = [];
     this.isEmpty = false;
     this.noData = false;
-    if ((this.model.ratype == 'multiplicity' || this.model.ratype == 'standard')) {
+    if ((this.model.ratype == 'multiplicity' || this.model.ratype == 'standard' || this.model.ratype == 'probability')) {
       this.isImplemented = false;
     } else {
       this.isImplemented = true;
@@ -44,7 +56,7 @@ export class RAComponent implements OnInit {
       this.isEmpty = true;
       return;
     }
-    var raQuery = "(" + ele.value + ")";
+    var raQuery = "{" + ele.value + "}";
     this.isFetching = true;
     var mapObj = {
       "project": "π",
@@ -59,23 +71,23 @@ export class RAComponent implements OnInit {
     var a = [];
     this.queryCollection = [];
     for (var i = 0; i < raQuery.length; i++) {
-      if (raQuery.charAt(i) == '(') {
+      if (raQuery.charAt(i) == '{') {
         a.push(i);
       }
-      if (raQuery.charAt(i) == ')') {
+      if (raQuery.charAt(i) == '}') {
         this.queryCollection.push(raQuery.substring(a.pop() + 1, i));
       }
     }
-    // function getIndex(arr , val){
-    //   let flt = false;
-    //   let index = Object.keys(arr).findIndex((it)=>{
-    //     return arr[it]['value'] == val;
-    //   });
-    //   if(index != -1){
-    //     flt = true;
-    //   }
-    //   return flt;
-    // }
+    function getIndex(arr, val) {
+      let flt = false;
+      let index = Object.keys(arr).findIndex((it) => {
+        return arr[it]['value'] == val;
+      });
+      if (index != -1) {
+        flt = true;
+      }
+      return flt;
+    }
     let tableObj = {}
     this.queryCollection.forEach(function (val, i) {
       //if(!getIndex(tableObj ,val)){
@@ -103,20 +115,25 @@ export class RAComponent implements OnInit {
       });
     });
     let queryFormat = {
-      "[": "(",
-      "]": ")",
-      "{": "[",
-      "}": "]",
+      // "[": "(",
+      // "]": ")",
+      "{": "(",
+      "}": ")",
+      // "@" : "(",
+      // "#" : ')'
     };
-    raQuery = this.queryEvluation(raQuery, /\[|\]|{|}/gi, queryFormat);
+    //raQuery = this.queryEvluation(raQuery, /\[|\]|{|}|@|#/gi, queryFormat);
+    raQuery = this.queryEvluation(raQuery, /{|}/gi, queryFormat);
     Object.keys(tableObj).forEach((val) => {
       let mapObj = {
-        "[": "(",
-        "]": ")",
-        "{": "[",
-        "}": ",annotations]",
+        "{": "(",
+        "}": ")",
+        //"{": "[",
+        "]": ",annotations]",
+        // "@" : "(",
+        // "#" : ')'
       };
-      tableObj[val]['value'] = this.queryEvluation(tableObj[val]['value'], /\[|\]|{|}/gi, mapObj);
+      tableObj[val]['value'] = this.queryEvluation(tableObj[val]['value'], /\]|{|}/gi, mapObj);
       // tableObj[val]['isApi'] = tableObj[val]['value'].indexOf('π') != -1 ? true : false;
       // tableObj[val]['isApi'] = tableObj[val]['value'].indexOf('σ') != -1 ? true : tableObj[val]['isApi'];
       tableObj[val]['symbol'] = tableObj[val]['value'].indexOf('⋈') != -1 ? '⋈' : '';
@@ -136,7 +153,7 @@ export class RAComponent implements OnInit {
       this.isFetching = false;
       this.response = res ? res : [];
       console.log(res);
-      if(!this.response.length){
+      if (!this.response.length) {
         this.noData = true;
       }
       // this.response = [];
@@ -147,9 +164,9 @@ export class RAComponent implements OnInit {
     console.log(tableObj);
   }
   getKeys(obj, flag) {
-    if(flag){
+    if (flag) {
       let keys = [];
-      this.response.forEach((val)=>{
+      this.response.forEach((val) => {
         keys = keys.concat(Object.keys(val));
       });
       this.tbl_keys = [...new Set(keys)];
