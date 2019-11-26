@@ -46,7 +46,7 @@ export class UploadComponent implements OnInit {
       this.uploadStatus = true;
       ele.value = "";
       setTimeout(() => {
-        this.uploadStatus = true;
+        this.uploadStatus = false;
       }, 10000);
     }, (err) => {
       console.log(err);

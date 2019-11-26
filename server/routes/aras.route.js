@@ -86,8 +86,10 @@ function raJoin(first, second) {
                 } else if (tab_name == 'standard') {
                     obj['annotations'] = logicalConjunction(frItem['annotations'], secItem['annotations']);
                 } else {
-                    console.log('Or V', frItem['annotations'], secItem['annotations']);
-                    console.log(frItem , secItem);
+
+                    obj['annotations'] = (parseFloat(frItem['annotations']) * parseFloat(secItem['annotations']));
+                    // console.log('Or V', frItem['annotations'], secItem['annotations']);
+                    // console.log(frItem , secItem);
                 }
                 joinCollection.push(obj);
             }
@@ -113,8 +115,10 @@ function raUnion(first, second) {
             } else if (tab_name == 'standard') {
                 unionCollection[idx]['annotations'] = logicalDisjunction(parseInt(unionCollection[idx]['annotations']), parseInt(raData['annotations']));
             } else {
-                console.log('And ', unionCollection[idx]['annotations'], raData['annotations']);
-                console.log(unionCollection[idx]['annotations'], raData['annotations']);
+                unionCollection[idx]['annotations'] = (parseFloat(unionCollection[idx]['annotations']) + parseFloat(raData['annotations']));
+                //console.log((parseFloat(unionCollection[idx]['annotations']) + parseFloat(raData['annotations'])));
+                // console.log('And ', unionCollection[idx]['annotations'], raData['annotations']);
+                // console.log(unionCollection[idx]['annotations'], raData['annotations']);
             }
         } else {
             unionCollection.push(raData);
@@ -153,13 +157,34 @@ function containsObject(arr, obj) {
  * @returns {Array} The data return from result table
  */
 const getQueryData = (sql, res) => {
-    sql = sql.replace(/0987654321/g, "_");
-    return selectCommand(sql).then((resp) => resp, (err) => {
-        console.log(err);
+    try {
+        sql = sql.replace(/0987654321/g, "_");
+        return selectCommand(sql).then((resp) => resp, (err) => {
+            console.log(err);
+            res.send({
+                message: err.code + " " + err.sqlMessage
+            });
+        });
+    } catch (err) {
         res.send({
-            message: err.code + " " + err.sqlMessage
-        })
+            message: "Query is Invalid, Please Try with valid Relation Algebra Query"
+        });
+        console.log(ex);
+    }
+}
+function probability(data) {
+    console.log('probability', data.length);
+    let temp = [];
+    data.forEach((obj) => {
+        let idx = containsObject(temp, obj);
+        console.log(idx, obj);
+        if (idx == -1) {
+            temp.push(obj);
+        } else {
+            temp[idx]['annotations'] = 1 - ((1 - parseFloat(temp[idx]['annotations'])) * (1 - parseFloat(obj['annotations'])));
+        }
     });
+    return temp;
 }
 /**
  * Querying Data from a Single Table
@@ -169,23 +194,31 @@ const getQueryData = (sql, res) => {
  * @returns {Array} The data return from result table
  */
 const nestedQueryEvaluation = async (res, nestedQuery, symbol, val) => {
-    var results = [];
-    for (let j = 0; j < nestedQuery.length; j++) {
-        nestedQuery[j] = nestedQuery[j].indexOf('σ') != -1 ? nestedQuery[j].replace(/,annotations/gi, "") : nestedQuery[j];
-        let sql = raToSql.getSql(nestedQuery[j]);
-        const data = await getQueryData(sql, res);
-        results.push(data);
+    try {
+        var results = [];
+        for (let j = 0; j < nestedQuery.length; j++) {
+            nestedQuery[j] = nestedQuery[j].indexOf('σ') != -1 ? nestedQuery[j].replace(/,annotations/gi, "") : nestedQuery[j];
+            let sql = raToSql.getSql(nestedQuery[j]);
+            const data = await getQueryData(sql, res);
+            results.push(data);
+        }
+        let report;
+        if (symbol) {
+            if (tab_name == 'probability') {
+                results[0] = probability(Object.assign([], results[0]));
+                results[1] = probability(Object.assign([], results[1]));
+            }
+            report = (symbol == '⋈') ? raJoin(results[0], results[1]) : raUnion(results[0], results[1]);
+        } else {
+            report = results[0];
+        }
+        if (report && report.length) {
+            var message = await dataInsertion(val, report);
+        }
+        return report;
+    } catch (ex) {
+        console.log(ex);
     }
-    let report;
-    if (symbol) {
-        report = (symbol == '⋈') ? raJoin(results[0], results[1]) : raUnion(results[0], results[1]);
-    } else {
-        report = results[0];
-    }
-    if (report && report.length) {
-        var message = await dataInsertion(val, report);
-    }
-    return report;
 }
 const queryEvaluation = async (obj, req, res) => {
     var frt = Object.keys(obj);
@@ -206,6 +239,8 @@ const queryEvaluation = async (obj, req, res) => {
                             collection[idx]['annotations'] = parseInt(collection[idx]['annotations']) + parseInt(obj['annotations']);
                         } else if (tab_name == 'standard') {
                             collection[idx]['annotations'] = logicalDisjunction(parseInt(collection[idx]['annotations']), parseInt(obj['annotations']));
+                        }else{
+                            collection[idx]['annotations'] = (1-((1-(parseFloat(collection[idx]['annotations']))) * (1- parseFloat(obj['annotations']))));
                         }
                     }
                 });
@@ -221,8 +256,9 @@ const queryEvaluation = async (obj, req, res) => {
                 res.send(collection);
             }
         } catch (ex) {
+            console.log(ex);
             res.send({
-                message: "Query is Invalid, Please Try with valid Relation Algebra Query"
+                message: "Somwthing went wrong, Please try again"
             });
         }
     }
