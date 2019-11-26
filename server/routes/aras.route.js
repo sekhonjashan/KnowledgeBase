@@ -7,10 +7,11 @@ const path = require('path');
 const mysql = require('mysql');
 const async = require('async');
 const csvHeaders = require('csv-headers');
+const readline = require('readline');
 const app = express();
 const aras = express.Router();
 let tblnm = "R";
-var csvfn = "files/sample.csv";
+var filePath = "files/sample.csv";
 var dbcon = mysql.createConnection({
     host: "127.0.0.1",
     user: "root",
@@ -18,66 +19,102 @@ var dbcon = mysql.createConnection({
     database: "test"
 });
 var tab_name = "multiplicity";
-function commonProperties(obj1, obj2) {
-    return Object.keys(obj1).concat(Object.keys(obj2)).sort().reduce(function (r, a, i, aa) {
+/**
+ * Find common properties in two Objects
+ * 
+ * @param {Object} first The First Object
+ * @param {Object} second The Second Object
+ * @returns {Array}
+ */
+function commonProperties(first, second) {
+    return Object.keys(first).concat(Object.keys(second)).sort().reduce(function (r, a, i, aa) {
         if (i && aa[i - 1] === a && a != "annotations") {
             r.push(a);
         }
         return r;
     }, []);
 }
+/**
+ * Truth Table between two numbers (logicalConjunction)
+ * 
+ * @param {Number} p The P Number
+ * @param {Number} q The Q Number
+ * @returns {Boolean}
+ */
 function logicalConjunction(p, q) {
-    console.log(+p, q, 'p,q');
     if (+p && +q) {
         return 1;
     }
     return 0;
 }
+/**
+ * Truth Table between two numbers (logicalDisjunction)
+ * 
+ * @param {Number} p The P Number
+ * @param {Number} q The Q Number
+ * @returns {Boolean}
+ */
 function logicalDisjunction(p, q) {
     if (+p || +q) {
         return 1;
     }
     return 0;
 }
-function raJoin(res) {
-    console.log(tab_name, 'logggggggggggggg');
+/**
+ * Joining two array of Objects
+ * 
+ * @param {Array} first The First Array of Objects
+ * @param {Array} second The Second Array of Objects
+ * @returns {Array}
+ */
+function raJoin(first, second) {
+    console.log(tab_name, 'joinnnnnnnnnnnnn');
     var joinCollection = [];
-    if (res.length > 1) {
-        res[0].forEach((frItem, i) => {
-            res[1].forEach((secItem, j) => {
-                let flag = true;
-                var similarProp = commonProperties(frItem, secItem);
-                similarProp.forEach((val) => {
-                    if (frItem[val] != secItem[val]) {
-                        flag = false;
-                    }
-                })
-                if (flag) {
-                    var obj = { ...frItem, ...secItem };
-                    if (tab_name == 'multiplicity') {
-                        obj['annotations'] = frItem['annotations'] * secItem['annotations'];
-                    } else if (tab_name == 'standard') {
-                        console.log(logicalConjunction(frItem['annotations'], secItem['annotations']));
-                        obj['annotations'] = logicalConjunction(frItem['annotations'], secItem['annotations']);
-                    }
-                    joinCollection.push(obj);
+    first.forEach((frItem, i) => {
+        second.forEach((secItem, j) => {
+            let flag = true;
+            var similarProp = commonProperties(frItem, secItem);
+            similarProp.forEach((val) => {
+                if (frItem[val] != secItem[val]) {
+                    flag = false;
                 }
             });
+            if (flag) {
+                var obj = { ...frItem, ...secItem };
+                if (tab_name == 'multiplicity') {
+                    obj['annotations'] = frItem['annotations'] * secItem['annotations'];
+                } else if (tab_name == 'standard') {
+                    obj['annotations'] = logicalConjunction(frItem['annotations'], secItem['annotations']);
+                } else {
+                    console.log('Or V', frItem['annotations'], secItem['annotations']);
+                    console.log(frItem , secItem);
+                }
+                joinCollection.push(obj);
+            }
         });
-    }
+    });
     return joinCollection;
 }
-function raUnion(res) {
+/**
+ * Union two array of Objects
+ * 
+ * @param {Array} first The First Array of Objects
+ * @param {Array} second The Second Array of Objects
+ * @returns {Array}
+ */
+function raUnion(first, second) {
     console.log("unionnnnnnnnnnnnnnn");
-    var unionCollection = Object.assign([], res[0]);
-    res[1].forEach((raData) => {
-        console.log(res[0]);
-        let idx = isAvailable(unionCollection, raData);
+    var unionCollection = Object.assign([], first);
+    second.forEach((raData) => {
+        let idx = containsObject(unionCollection, raData);
         if (idx != -1) {
             if (tab_name == 'multiplicity') {
                 unionCollection[idx]['annotations'] = parseInt(unionCollection[idx]['annotations']) + parseInt(raData['annotations']);
             } else if (tab_name == 'standard') {
                 unionCollection[idx]['annotations'] = logicalDisjunction(parseInt(unionCollection[idx]['annotations']), parseInt(raData['annotations']));
+            } else {
+                console.log('And ', unionCollection[idx]['annotations'], raData['annotations']);
+                console.log(unionCollection[idx]['annotations'], raData['annotations']);
             }
         } else {
             unionCollection.push(raData);
@@ -85,7 +122,14 @@ function raUnion(res) {
     });
     return unionCollection;
 }
-function isAvailable(arr, obj) {
+/**
+ * Determine if an object already exists in an array
+ * 
+ * @param {Array} arr The arr Array
+ * @param {Object} obj The obj Object
+ * @returns {Boolean}
+ */
+function containsObject(arr, obj) {
     let flag = -1;
     arr.forEach((item, i) => {
         var ct = 0
@@ -101,6 +145,13 @@ function isAvailable(arr, obj) {
     });
     return flag;
 }
+/**
+ * Querying Data from a Single Table
+ * 
+ * @param {String} sql The Sql Statment String
+ * @param {Object} obj The res Object(response Object)
+ * @returns {Array} The data return from result table
+ */
 const getQueryData = (sql, res) => {
     sql = sql.replace(/0987654321/g, "_");
     return selectCommand(sql).then((resp) => resp, (err) => {
@@ -110,6 +161,13 @@ const getQueryData = (sql, res) => {
         })
     });
 }
+/**
+ * Querying Data from a Single Table
+ * 
+ * @param {String} sql The Sql Statment String
+ * @param {Object} obj The res Object(response Object)
+ * @returns {Array} The data return from result table
+ */
 const nestedQueryEvaluation = async (res, nestedQuery, symbol, val) => {
     var results = [];
     for (let j = 0; j < nestedQuery.length; j++) {
@@ -120,7 +178,7 @@ const nestedQueryEvaluation = async (res, nestedQuery, symbol, val) => {
     }
     let report;
     if (symbol) {
-        report = (symbol == '⋈') ? raJoin(results) : raUnion(results);
+        report = (symbol == '⋈') ? raJoin(results[0], results[1]) : raUnion(results[0], results[1]);
     } else {
         report = results[0];
     }
@@ -140,7 +198,7 @@ const queryEvaluation = async (obj, req, res) => {
                 let temp = Object.assign([], obj[val].results);
                 let collection = [];
                 temp.forEach((obj) => {
-                    let idx = isAvailable(collection, obj);
+                    let idx = containsObject(collection, obj);
                     if (idx == -1) {
                         collection.push(obj);
                     } else {
@@ -167,150 +225,7 @@ const queryEvaluation = async (obj, req, res) => {
                 message: "Query is Invalid, Please Try with valid Relation Algebra Query"
             });
         }
-        // if (obj[val].isApi && !obj[val].final && obj[val].symbol) {
-        //     var nestedQuery = obj[val].value.split(obj[val].symbol);
-        //     obj[val].results =  await nestedQueryEvaluation(res, nestedQuery, obj[val].symbol, val);
-
-        // } else if (obj[val].isApi && !obj[val].final && !obj[val].symbol) {
-        //     try {
-        //         obj[val].value = obj[val].value.indexOf('σ') != -1 ? obj[val].value.replace(/,annotations/gi, "") : obj[val].value;
-        //         sql = raToSql.getSql(obj[val].value);
-        //         obj[val].results = await getQueryData(sql, res)
-        //         var message = await dataInsertion(val, obj[val].results);
-        //         console.log(message);
-        //     } catch (ex) {
-        //         console.log(ex);
-        //         res.send({
-        //             message: "Query is Invalid, Please Try with valid Relation Algebra Query"
-        //         });
-        //     }
-        // } else if (obj[val].final) {
-        //     try {
-        //         console.log(obj[val].value, 'obj[val].value obj[val].value obj[val].value obj[val].value obj[val].value');
-        //         let data;
-        //         //if (obj[val].value && (obj[val].value.indexOf('σ') != -1 || obj[val].value.indexOf('π') != -1) || (frt.length == 1 && (obj[val].value.indexOf('⋈') == -1 && obj[val].value.indexOf('∪') == -1))) {
-        //         let symols = ['⋈','∪'];    
-        //         if (symols.indexOf(obj[val].symbol) == -1) {
-        //             obj[val].value = obj[val].value.indexOf('σ') != -1 ? obj[val].value.replace(/,annotations/gi, "") : obj[val].value;
-        //             sql = raToSql.getSql(obj[val].value);
-        //             data = await getQueryData(sql, res);
-        //         } else {
-        //             let nestedQuery = obj[val].value.split(obj[val].symbol);
-        //             nestedQuery = nestedQuery.map((val) => {
-        //                 return val.replace(/\(|\)/g, '');
-        //             });
-        //             console.log(nestedQuery,nestedQuery,nestedQuery,nestedQuery);
-        //             if (obj[val].symbol == '⋈' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
-        //                 data = raJoin([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-        //             } else if (obj[val].symbol == '∪' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
-        //                 data = raUnion([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-        //             } else {
-        //                 let dataResult = [];
-        //                 for(let m = 0; m < nestedQuery.length ; m++){
-        //                 //nestedQuery.forEach((val) => {
-        //                     let sql = raToSql.getSql(nestedQuery[m]);
-        //                     const reslt = await getQueryData(sql, res);
-        //                     dataResult.push(reslt)
-        //                 //});
-        //                 }
-        //                 if(obj[val].symbol == '⋈'){
-        //                     data = raJoin(dataResult);
-        //                 }else{
-        //                     data = raJoin(dataResult);
-        //                 } 
-        //             }
-        //         }
-        //         let temp = Object.assign([], data);
-        //         let collection = [];
-        //         temp.forEach((obj) => {
-        //             let idx = isAvailable(collection, obj);
-        //             if (idx == -1) {
-        //                 collection.push(obj);
-        //             } else {
-        //                 collection[idx]['annotations'] = parseInt(collection[idx]['annotations']) + parseInt(obj["annotations"]);
-        //             }
-        //         })
-        //         res.send(data);
-        //     } catch (ex) {
-        //         console.log(ex);
-        //         res.send({
-        //             message: "Query is Invalid, Please Try with valid Relation Algebra Query"
-        //         });
-        //     }
-        // } else {
-        //     // let nestedQuery = obj[val].value.split(obj[val].symbol);
-        //     // nestedQuery = nestedQuery.map((val) => {
-        //     //     return val.replace(/\(|\)/g, '');
-        //     // });
-        //     // if (obj[val].symbol == '⋈') {
-        //     //     obj[val].results = raJoin([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-        //     // } else {
-        //     //     obj[val].results = raUnion([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-        //     // }
-
-        //     let nestedQuery = obj[val].value.split(obj[val].symbol);
-        //     nestedQuery = nestedQuery.map((val) => {
-        //         return val.replace(/\(|\)/g, '');
-        //     });
-        //     console.log(nestedQuery,nestedQuery,nestedQuery,nestedQuery);
-        //     if (obj[val].symbol == '⋈' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
-        //         obj[val].results = raJoin([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-        //     } else if (obj[val].symbol == '∪' && obj[nestedQuery[0]] && obj[nestedQuery[0]].results) {
-        //         obj[val].results = raUnion([obj[nestedQuery[0]].results, obj[nestedQuery[1]].results]);
-        //     } else {
-        //         let dataResult = [];
-        //         for(let m = 0; m < nestedQuery.length ; m++){
-        //         //nestedQuery.forEach((val) => {
-        //             let sql = raToSql.getSql(nestedQuery[m]);
-        //             const reslt = await getQueryData(sql, res);
-        //             dataResult.push(reslt)
-        //         //});
-        //         }
-        //         if(obj[val].symbol == '⋈'){
-        //             obj[val].results = dataResult.length > 1 ? raJoin(dataResult) : dataResult[0];
-        //         }else{
-        //             obj[val].results =  dataResult.length > 1 ? raJoin(dataResult) : dataResult[0];
-        //         } 
-        //     }
-        //     if (obj[val].results && obj[val].results.length) {
-        //         var message = await dataInsertion(val, obj[val].results);
-        //         console.log(message);
-        //     }
-        // }
     }
-
-    // Object.keys(obj).forEach((val) => {
-    //     var results = [];
-    //     if (obj[val].isApi && !obj[val].final) {
-    //         var nestedQuery = obj[val].value.split(obj[val].symbol);
-    //         console.log(nestedQuery);
-    //         const numFruit = await getNumFruit(raToSql.getSql(nestedQuery[0]), i , nestedQuery);
-    //         console.log(numFruit);
-    //         // nestedQuery.forEach(function (query, i) {
-    //         //     try {
-    //         //         sql = raToSql.getSql(query);
-    //         //         if (!sql) {
-    //         //             res.send({
-    //         //                 error: {
-    //         //                     code: "Query is Invalid, Try with Valid Query"
-    //         //                 }
-    //         //             })
-    //         //         }
-    //         //         const numFruit = await getNumFruit(sql , i , nestedQuery);
-    //         //         console.log(numFruit);
-    //         //     }
-    //         //     catch (ex) {
-    //         //         console.log(ex);
-    //         //         res.send({
-    //         //             error: {
-    //         //                 code: "Please enter valid Relation Algebra Query"
-    //         //             }
-    //         //         })
-    //         //     }
-
-    //         // });
-    //     }
-    // });
 }
 
 function dataInsertion(tblnm, data) {
@@ -329,7 +244,6 @@ function dataInsertion(tblnm, data) {
         });
         values.push(arr);
     });
-    console.log(values);
     return new Promise((resolve, rej) => {
         let context = { db: dbcon };
         context.db.query(`DROP TABLE IF EXISTS ${tblnm}`,
@@ -364,48 +278,12 @@ function dataInsertion(tblnm, data) {
     })
 }
 
-// function getMutiplicity(obj, req, res) {
-//     Object.keys(obj).forEach((val) => {
-//         var results = [];
-//         if (obj[val].isApi && !obj[val].final) {
-//             var nestedQuery = obj[val].value.split(obj[val].symbol);
-//             console.log(nestedQuery);
-//             nestedQuery.forEach(function (query, i) {
-//                 try {
-//                     sql = raToSql.getSql(query);
-//                     if (!sql) {
-//                         res.send({
-//                                 message: "Query is Invalid, Try with Valid Query"
-//                         })
-//                     }
-//                     selectCommand(sql).then((resp) => {
-//                         results.push(resp)
-//                         if (i === nestedQuery.length - 1) {
-//                             console.log(raJoin(results));
-//                         }
-//                     }, (err) => {
-//                         res.send({ message: err.code });
-//                     });
-//                 }
-//                 catch (ex) {
-//                     console.log(ex);
-//                     res.send({
-//                             message: "Please enter valid Relation Algebra Query"
-//                     })
-//                 }
 
-//             });
-//         }
-//     });
-// }
-aras.route('/multiplicity').get(function (req, res) {
+aras.route('/provenance_semirings').get(function (req, res) {
     let params = JSON.parse(req.query.ra);
     tab_name = params['ratype'];
-    console.log(tab_name);
     try {
-        console.log(params.query);
         let validQuery = raToSql.getSql(params.query);
-        console.log(validQuery);
         if (validQuery) {
             queryEvaluation(params.bodmas, req, res);
         }
@@ -436,7 +314,7 @@ function connectionStatus(callback) {
 function selectCommand(sql) {
     var regex = /DISTINCT /gi;
     sql = sql.replace(regex, '');
-    console.log(sql, "*******");
+    console.log('Query : ', sql);
     return new Promise((res, rej) => {
         connectionStatus().then(() => {
             dbcon.query(sql, function (err, result, fields) {
@@ -445,7 +323,6 @@ function selectCommand(sql) {
                     console.log(err);
                 }
                 res(result);
-                console.log(sql);
             });
         }, (err) => {
             rej(err);
@@ -453,12 +330,7 @@ function selectCommand(sql) {
     })
 
 }
-aras.route('/upload').post(function (req, res) {
-    let file = req.body.params.ra;
-    if (file) {
-        tblnm = file.split('.').slice(0, -1).join('.');
-    }
-    csvfn = 'files/' + req.body.params.ra;
+function csvFormatUpload(res, csvfn) {
     return new Promise((resolve, reject) => {
         csvHeaders({
             file: csvfn,
@@ -467,18 +339,17 @@ aras.route('/upload').post(function (req, res) {
             if (err) reject(err);
             else resolve({ headers });
         });
-    })
-        .then(context => {
-            return new Promise((resolve, reject) => {
-                connectionStatus().then(() => {
-                    context.db = dbcon;
-                    resolve(context);
-                }, (err) => {
-                    console.error('error connecting: ' + err.stack);
-                    reject(err);
-                });
-            })
+    }).then(context => {
+        return new Promise((resolve, reject) => {
+            connectionStatus().then(() => {
+                context.db = dbcon;
+                resolve(context);
+            }, (err) => {
+                console.error('error connecting: ' + err.stack);
+                reject(err);
+            });
         })
+    })
         .then(context => {
             return new Promise((resolve, reject) => {
                 context.db.query(`DROP TABLE IF EXISTS ${tblnm}`,
@@ -557,12 +428,64 @@ aras.route('/upload').post(function (req, res) {
         })
         .then(context => {
             //context.db.end();
-            res.send({ message: "Data Sucessfully uploaded" });
+            res.send({ message: "Data Sucessfully uploaded with file name " + tblnm });
         })
         .catch(err => {
             res.send({ message: (err.stack ? err.stack : "Something went wrong, Please Try Again") });
             console.error("err", err.stack);
         });
 
+}
+async function textFileUpload(res, data, tblnm) {
+    try {
+        await dataInsertion(tblnm, data);
+        res.send({ message: "Data Sucessfully uploaded with file name " + tblnm });
+    } catch (err) {
+        res.send({ message: "Something went wrong, Please Try Again" });
+    }
+
+}
+/**
+ * https://usefulangle.com/post/95/nodejs-read-file-line-by-line
+ */
+aras.route('/upload').post(function (req, res) {
+    let file = req.body.params.ra;
+    if (file) {
+        tblnm = file.split('.').slice(0, -1).join('.');
+        tblnm = tblnm.replace(/[^A-Za-z0-9]/g, "");
+    }
+    filePath = 'files/' + req.body.params.ra;
+    if (file.indexOf('.csv') != -1) {
+        csvFormatUpload(res, filePath);
+    } else {
+        try {
+            let rl = readline.createInterface({
+                input: fs.createReadStream(filePath)
+            });
+            let line_no = false;
+            let fileData = [];
+            let objProp = [];
+            rl.on('line', function (line) {
+                let propColl = line.split(",").map(ln => {
+                    return ln.trim();
+                });
+                if (!line_no && line) {
+                    objProp = propColl;
+                    line_no = true;
+                } else {
+                    let objData = {};
+                    objProp.forEach((prop, ind) => {
+                        objData[prop] = propColl[ind];
+                    });
+                    fileData.push(objData);
+                }
+            });
+            rl.on('close', function (line) {
+                textFileUpload(res, fileData, tblnm);
+            });
+        } catch (e) {
+            console.log('Error:', e.stack);
+        }
+    }
 });
 module.exports = aras;
