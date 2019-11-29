@@ -10,7 +10,8 @@ export class RAComponent implements OnInit {
   constructor(private service: ArasService) {
   }
   model: any = {
-    ratype: 'multiplicity'
+    ratype: 'multiplicity',
+    certainity : 'certainity1'
   };
   isImplemented = false;
   queryCollection = [];
@@ -32,7 +33,8 @@ export class RAComponent implements OnInit {
   clear(ele) {
     ele.value = "";
     this.model = {
-      ratype: 'multiplicity'
+      ratype: 'multiplicity',
+      certainity : 'certainity1'
     };
     this.response = [];
     this.isImplemented = false;
@@ -46,12 +48,12 @@ export class RAComponent implements OnInit {
     this.response = [];
     this.isEmpty = false;
     this.noData = false;
-    if ((this.model.ratype == 'multiplicity' || this.model.ratype == 'standard' || this.model.ratype == 'probability')) {
-      this.isImplemented = false;
-    } else {
-      this.isImplemented = true;
-      return;
-    }
+    // if (this.model.ratype != 'certainity') {
+    //   this.isImplemented = false;
+    // } else {
+    //   this.isImplemented = true;
+    //   return;
+    // }
     if (!ele.value.length) {
       this.isEmpty = true;
       return;
@@ -143,10 +145,11 @@ export class RAComponent implements OnInit {
       // tableObj["table1"]["isApi"] = true;
       tableObj["table1"]['final'] = true;
     }
+    let selectedVal = (this.model && this.model['ratype']) ? this.model['ratype'] : "multiplicity";
     var params = {
       query: raQuery,
       bodmas: tableObj,
-      ratype: (this.model && this.model['ratype']) ? this.model['ratype'] : "multiplicity"
+      ratype: (selectedVal == 'certainity') ? this.model['certainity'] : selectedVal
     }
     // var me = this;
     this.service.op_mutliplicity(params).subscribe((res: []) => {
