@@ -259,7 +259,8 @@ const queryEvaluation = async (obj, req, res) => {
                 } else if (tab_name == 'probability' || tab_name == 'certainity1' || tab_name == 'certainity2') {
                     let flag = (tab_name == 'certainity1' || tab_name == 'certainity2') ? true : false;
                     collection = probability(temp , flag);
-                } else if (tab_name == 'ploynomial') {
+                } 
+                if (tab_name == 'ploynomial') {
                     collection.forEach((col) => {
                         var ploy = {};
                         col['annotations'].split('+').forEach((prob) => {
