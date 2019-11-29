@@ -46,7 +46,7 @@ export class RAComponent implements OnInit {
     this.response = [];
     this.isEmpty = false;
     this.noData = false;
-    if ((this.model.ratype == 'multiplicity' || this.model.ratype == 'standard' || this.model.ratype == 'probability' || this.model.ratype == 'ploynomial')) {
+    if ((this.model.ratype == 'multiplicity' || this.model.ratype == 'standard' || this.model.ratype == 'probability')) {
       this.isImplemented = false;
     } else {
       this.isImplemented = true;
