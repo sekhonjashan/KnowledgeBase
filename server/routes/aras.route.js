@@ -83,7 +83,7 @@ function raJoin(first, second) {
                 var obj = { ...frItem, ...secItem };
                 if (tab_name == 'multiplicity' || tab_name == 'probability' || tab_name == 'certainity1') {
                     let calu = frItem['annotations'] * secItem['annotations'];
-                    obj['annotations'] = tab_name == 'multiplicity' ? calu : calu.toFixed(2);
+                    obj['annotations'] = tab_name == 'multiplicity' ? calu : calu.toFixed(3);
                 } else if (tab_name == 'standard') {
                     obj['annotations'] = logicalConjunction(frItem['annotations'], secItem['annotations']);
                 } else if (tab_name == 'ploynomial') {
@@ -113,7 +113,7 @@ function raUnion(first, second) {
         if (idx != -1) {
             if (tab_name == 'multiplicity' || tab_name == 'probability' || tab_name == 'certainity1' || tab_name == 'certainity2') {
                 let calu = parseInt(unionCollection[idx]['annotations']) + parseInt(raData['annotations']);
-                unionCollection[idx]['annotations'] = tab_name == 'multiplicity' ? calu : calu.toFixed(2);
+                unionCollection[idx]['annotations'] = tab_name == 'multiplicity' ? calu : calu.toFixed(3);
             } else if (tab_name == 'standard') {
                 unionCollection[idx]['annotations'] = logicalDisjunction(parseInt(unionCollection[idx]['annotations']), parseInt(raData['annotations']));
             } else if (tab_name == 'ploynomial') {
@@ -180,7 +180,7 @@ function probability(data, isProbability) {
             matchedArray.forEach((ele) => {
                 if (val) {
                     if (isProbability) {
-                        val = Math.max(val, data[ele]['annotations']);
+                        val = Math.max(val, +data[ele]['annotations']);
                     } else {
                         val *= (1 - +(data[ele]['annotations']));
                     }
@@ -193,7 +193,7 @@ function probability(data, isProbability) {
                 }
                 data[ele]['checked'] = true;
             });
-            obj['annotations'] = (1 - val).toFixed(2);
+            obj['annotations'] = isProbability ?  val.toFixed(3)  : (1 - val).toFixed(3);
             delete obj['checked'];
             temp.push(obj);
         }
@@ -241,7 +241,7 @@ const queryEvaluation = async (obj, req, res) => {
             if (obj[val].final) {
                 let temp = Object.assign([], obj[val].results);
                 let collection = [];
-                if (tab_name != 'probability') {
+                if (tab_name == 'multiplicity' || tab_name == 'standard' || tab_name == 'ploynomial') {
                     temp.forEach((obj) => {
                         let idx = containsObject(collection, obj);
                         if (idx == -1) {
