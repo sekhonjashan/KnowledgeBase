@@ -15,7 +15,7 @@ var filePath = "files/sample.csv";
 var dbcon = mysql.createConnection({
     host: "127.0.0.1",
     user: "root",
-    password: "shaik@123",
+    password: "password",
     database: "test"
 });
 var tab_name = "multiplicity";
