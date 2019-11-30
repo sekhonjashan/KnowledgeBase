@@ -11,9 +11,9 @@ export class RAComponent implements OnInit {
   }
   model: any = {
     ratype: 'multiplicity',
-    certainity : 'certainity1'
+    certainity: 'certainity1'
   };
-  isImplemented = false;
+  //isImplemented = false;
   queryCollection = [];
   response = [];
   isFetching = false;
@@ -23,37 +23,54 @@ export class RAComponent implements OnInit {
   tbl_keys;
   ngOnInit() {
   }
-
-  queryEvluation(str, regx, mapObj) {
+  /**
+   * This method performs a replace utiltiy operation and constrcuts a Relation algebra query which is suitable for ra-to-sql.
+   * RegExp replace method is used to replace the selected string.
+   * @param str entered Relational algebara query
+   * @param regx Regexp for ra-to-sql libarary accepted format
+   * @param mapObj object contains the replace experessions
+   */
+  replaceUtility(str, regx, mapObj) {
     str = str.replace(regx, function (matched) {
       return mapObj[matched];
     });
     return str;
   }
+  /**
+   * This method triggers clear functionality
+   * restores application state to the initial state
+   * clears the input field
+   * @param ele refrence of HTML Element(inputtext box)
+   */
   clear(ele) {
     ele.value = "";
     this.model = {
       ratype: 'multiplicity',
-      certainity : 'certainity1'
+      certainity: 'certainity1'
     };
     this.response = [];
-    this.isImplemented = false;
+    //this.isImplemented = false;
     this.isFetching = false;
     this.isEmpty = false;
     this.noData = false;
     return;
   }
+
+  /**
+   * This method is executed whenever an action is performed on submit button.
+   * validation will be triggered and checks whether query is entered or not. if not entered it throws a validation message
+   * executes 'replaceUtility' for constructs sutiable input to ra-to-sql library for Relational Algebra query formation.
+   * splits the entered query as small sub inner queries by based on '{' , '}' symbols positions and each inner query treated as a object
+   * executes the GET API call for Relation Algebra Query evaluation
+   * constructs an Object by combining all the inner query objects
+   * @param ele refrence of HTML Element(inputtext box)
+   * @returns retrieves the data from service
+   */
   submitQuery(ele) {
     console.log(this.model);
     this.response = [];
     this.isEmpty = false;
     this.noData = false;
-    // if (this.model.ratype != 'certainity') {
-    //   this.isImplemented = false;
-    // } else {
-    //   this.isImplemented = true;
-    //   return;
-    // }
     if (!ele.value.length) {
       this.isEmpty = true;
       return;
@@ -64,11 +81,10 @@ export class RAComponent implements OnInit {
       "project": "π",
       "select": "σ",
       "union": "∪",
-      //"U": "∪",
       "natjoin": "⋈",
       "_": this.special_case
     };
-    raQuery = this.queryEvluation(raQuery, /project|select|union|natjoin|_/gi, mapObj);
+    raQuery = this.replaceUtility(raQuery, /project|select|union|natjoin|_/gi, mapObj);
     raQuery = raQuery.replace(/\s/g, '')
     var a = [];
     this.queryCollection = [];
@@ -102,12 +118,6 @@ export class RAComponent implements OnInit {
         let start = tableObj[it].value, end = tableObjCl[itm].value;
         if (start != end && start.indexOf(end) != -1) {
           tableObj[it].value = start.split(end).join(itm);
-          tableObj[it].combine = true;
-          //  if(tableObj[it].tables){
-          //   tableObj[it].tables.push(itm);
-          //  }else{
-          //   tableObj[it].tables = [itm];
-          //  }
           if (Object.keys(tableObj).length == (j + 1)) {
             tableObj[it]['final'] = true;
           }
@@ -117,32 +127,21 @@ export class RAComponent implements OnInit {
       });
     });
     let queryFormat = {
-      // "[": "(",
-      // "]": ")",
       "{": "(",
-      "}": ")",
-      // "@" : "(",
-      // "#" : ')'
+      "}": ")"
     };
-    //raQuery = this.queryEvluation(raQuery, /\[|\]|{|}|@|#/gi, queryFormat);
-    raQuery = this.queryEvluation(raQuery, /{|}/gi, queryFormat);
+    raQuery = this.replaceUtility(raQuery, /{|}/gi, queryFormat);
     Object.keys(tableObj).forEach((val) => {
       let mapObj = {
         "{": "(",
         "}": ")",
-        //"{": "[",
-        "]": ",annotations]",
-        // "@" : "(",
-        // "#" : ')'
+        "]": ",annotation]"
       };
-      tableObj[val]['value'] = this.queryEvluation(tableObj[val]['value'], /\]|{|}/gi, mapObj);
-      // tableObj[val]['isApi'] = tableObj[val]['value'].indexOf('π') != -1 ? true : false;
-      // tableObj[val]['isApi'] = tableObj[val]['value'].indexOf('σ') != -1 ? true : tableObj[val]['isApi'];
+      tableObj[val]['value'] = this.replaceUtility(tableObj[val]['value'], /\]|{|}/gi, mapObj);
       tableObj[val]['symbol'] = tableObj[val]['value'].indexOf('⋈') != -1 ? '⋈' : '';
       tableObj[val]['symbol'] = tableObj[val]['value'].indexOf('∪') != -1 ? '∪' : tableObj[val]['symbol'];
     });
     if (Object.keys(tableObj).length == 1 && !tableObj["table1"].symbol.length) {
-      // tableObj["table1"]["isApi"] = true;
       tableObj["table1"]['final'] = true;
     }
     let selectedVal = (this.model && this.model['ratype']) ? this.model['ratype'] : "multiplicity";
@@ -166,6 +165,13 @@ export class RAComponent implements OnInit {
     });
     console.log(tableObj);
   }
+/**
+ * This method is helps to show the data into web page
+ * Sort functionality to result data which is retrived from database
+ * 'annotation' property will be placed as the last item in sorted order.
+ * @param obj 
+ * @param flag 
+ */
   getKeys(obj, flag) {
     if (flag) {
       let keys = [];
@@ -173,7 +179,7 @@ export class RAComponent implements OnInit {
         keys = keys.concat(Object.keys(val));
       });
       this.tbl_keys = [...new Set(keys)];
-      let idx = this.tbl_keys.indexOf('annotations');
+      let idx = this.tbl_keys.indexOf('annotation');
       if (idx != -1) {
         let temp = this.tbl_keys[idx];
         this.tbl_keys.splice(idx, 1);

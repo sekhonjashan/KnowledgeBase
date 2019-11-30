@@ -59,10 +59,10 @@
                 <div class="alert alert-warning" *ngIf="!ta.value.length && isEmpty">
                     Please enter Relational Algebra Query!
                 </div>
-                <div class="alert alert-warning" *ngIf="isImplemented">
+                <!-- <div class="alert alert-warning" *ngIf="isImplemented">
                     {{model.ratype}} functionality is not yet implemented, Please try with multiplicity and (0 or 1
                     standard functionality)
-                </div>
+                </div> -->
                 <div class="alert alert-danger" *ngIf="response?.message && ta.value.length">
                     {{response.message}}
                 </div>
@@ -111,7 +111,7 @@
                 </tr>
             </tbody>
         </table>
-        <div class="alert alert-warning mt-3" *ngIf="noData && !isEmpty && !isImplemented && !response?.message">
+        <div class="alert alert-warning mt-3" *ngIf="noData && !isEmpty && !response?.message">
             No data found with requested Query!.
         </div>
     </div>

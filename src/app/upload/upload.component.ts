@@ -6,7 +6,7 @@ import { ArasService } from '../services/aras.service';
   templateUrl: './upload.component.html',
   styleUrls: ['./upload.component.css']
 })
-export class UploadComponent implements OnInit {
+export class UploadComponent {
   fileInfo;
   constructor(private service: ArasService) { }
   isFileSlected = false;
@@ -14,15 +14,19 @@ export class UploadComponent implements OnInit {
   uploadStatus = false;
   fileStaus;
   isValidFormat = false;
-  ngOnInit() {
-  }
-
+  /**
+   * This method performs a file Validation operation i.e selected filed valid or not
+   * if selected file is valid than validation will be skipped or else retruns a validation message
+   * file allowed formats only .csv Or .txt
+   * @param ele refrence of file upload HTML Element , return the list of files selected
+   */
   fileValidation(ele) {
     var alowedFormats = /(\.csv|\.txt)$/i;
     let files = ele.files;
     if (files.length) {
       this.fileInfo = files[0];
-      if(!alowedFormats.exec(this.fileInfo.name)){
+      if (!alowedFormats.exec(this.fileInfo.name)) {
+        this.isFileSlected = false;
         ele.value = "";
         console.log('This file is not allowed, please upload valid file.');
         this.isValidFormat = true;
@@ -32,8 +36,21 @@ export class UploadComponent implements OnInit {
       this.isFileSlected = false;
     }
   }
+  /**
+   * This method is executed whenever an action is performed on upload button.
+   * validation will be triggered 
+   * checks whether file is selected or not 
+   * if a file is selected procced to next step or else throws a validation message.
+   * executes the POST API call for file upload Operation by calling common service method(upload_CSV_data)
+   * @param ele refrence of file upload HTML Element , return the list of files selected
+   * @return upload status
+   * if status is fails than throws a validation message or else success status will be shown in the web page
+   */
   uploadFile(ele) {
-    if (!this.fileInfo) {
+    if(this.isValidFormat){
+      return ;
+    }
+    if (!this.fileInfo || this.isValidFormat) {
       return this.isFileSlected = true;
     }
     // let formData = new FormData();
@@ -45,9 +62,9 @@ export class UploadComponent implements OnInit {
       this.isUploaded = false;
       this.uploadStatus = true;
       ele.value = "";
-      setTimeout(() => {
-        this.uploadStatus = false;
-      }, 10000);
+      // setTimeout(() => {
+      //   this.uploadStatus = false;
+      // }, 10000);
     }, (err) => {
       console.log(err);
       this.isUploaded = false;
