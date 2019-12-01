@@ -1,21 +1,110 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <a class="navbar-brand" href="#">ARAS</a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
-  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
-      <li class="nav-item" [routerLinkActive]="['active']">
-        <a class="nav-link" [routerLink] = "['']">Upload</a>
-      </li>
-      <li class="nav-item" [routerLinkActive]="['active']">
-        <a class="nav-link" [routerLink] = "['ra']">Query</a>
-      </li>
-    </ul>
+<nav class="navbar navbar-expand-lg info-color-dark">
+  <div class="container">
+    <a href="#" class="navbar-brand hover-primary4 primary0">
+      <img src="../assets/brand.jpg" width="250" alt="" class="d-inline-block align-middle mr-2">
+      <span class="font-weight-bold position-relative">Annotated Relational Algebra System (ARAS)
+          <p class="brand-title">Knowledge Base</p>
+      </span>
+      
+    </a>
+    <!-- <a class="navbar-brand" href="#">ARAS</a> -->
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
   </div>
 </nav>
-
-<div class="container">
-    <router-outlet></router-outlet>
+<hr style="margin-bottom: .10rem!important;margin-top: .10rem!important;">
+<div class="navbar navbar-expand-lg info-color-dark">
+  <div class="container">
+    <div id="navbarSupportedContent" class="collapse navbar-collapse">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item"><a [routerLink]="['']" [routerLinkActive]="['active']" [routerLinkActiveOptions]="{exact: true}"
+            class="nav-link rounded p-2 px-3 mr-4 d-none d-md-inline-block hover-primary4">About Us
+            <i class="fas fa-info-circle white-text ml-2"></i>
+          </a></li>
+        <li class="nav-item"> <a [routerLink]="['upload']" [routerLinkActive]="['active']"
+            class="nav-link rounded p-2 px-3 mr-4 d-none d-md-inline-block hover-primary4">Upload
+            <i class="fas fa-file-upload white-text ml-2"> </i>
+          </a></li>
+        <li class="nav-item"><a [routerLink]="['ra']" [routerLinkActive]="['active']"
+            class="nav-link rounded p-2 px-3 mr-4 d-none d-md-inline-block hover-primary4">Relational
+            Algebra Query
+            <i class="fas fa-database white-text ml-2"> </i>
+          </a></li>
+      </ul>
+    </div>
+  </div>
 </div>
+<div class="container">
+  <router-outlet></router-outlet>
+</div>
+<footer class="page-footer font-small unique-color-dark pt-4">
+  <div class="container text-center text-md-left">
+    <div class="row">
+      <div class="col-md-6 mx-auto">
+        <h5 class="font-weight-bold mt-3 mb-4">Sample Queries</h5>
+        <ul class="list-unstyled" style="color: rgba(255,255,255,0.6);">
+          <li>π[a,c]({{'{'}}{{'{'}}π[a,b](R) natjoin π[b,c](R){{'}'}} ∪ {{'{'}}π[a,c](R) natjoin
+            π[b,c](R){{'}'}}{{'}'}})</li>
+
+          <li>Sel[Number > 14 AND !(Number = 15 OR Number = 18)](Numbers)</li>
+        </ul>
+      </div>
+      <hr class="clearfix w-100 d-md-none">
+      <div class="col-md-3 mx-auto">
+        <h5 class="font-weight-bold mt-3 mb-4">Query Syntax</h5>
+        <ul class="list-unstyled" style="color: rgba(255,255,255,0.6);">
+          <li>Projection: <span class="badge badge-secondary">project[a,b](A), π[a,b](A)</span></li>
+          <li>Selection: <span class="badge badge-secondary">select[a,b](A), σ[a,b](A)</span>
+          </li>
+        </ul>
+
+      </div>
+      <hr class="clearfix w-100 d-md-none">
+      <div class="col-md-3 mx-auto">
+        <h5 class="font-weight-bold mt-3 mb-4"> </h5>
+        <ul class="list-unstyled" style="color: rgba(255,255,255,0.6);">
+          <li>Natural Join: <span class="badge badge-secondary">(A natjoin B), (A ⋈ B)</span></li>
+          <li>Union: <span class="badge badge-secondary">(A union B), (A ∪ B)</span></li>
+          <li>Cartesian product: <span class="badge badge-secondary">A × B</span></li>
+        </ul>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- <hr>
+  <ul class="list-unstyled list-inline text-center">
+    <li class="list-inline-item">
+      <a class="btn-floating btn-fb mx-1">
+        <i class="fab fa-facebook-f"> </i>
+      </a>
+    </li>
+    <li class="list-inline-item">
+      <a class="btn-floating btn-tw mx-1">
+        <i class="fab fa-twitter"> </i>
+      </a>
+    </li>
+    <li class="list-inline-item">
+      <a class="btn-floating btn-gplus mx-1">
+        <i class="fab fa-google-plus-g"> </i>
+      </a>
+    </li>
+    <li class="list-inline-item">
+      <a class="btn-floating btn-li mx-1">
+        <i class="fab fa-linkedin-in"> </i>
+      </a>
+    </li>
+    <li class="list-inline-item">
+      <a class="btn-floating btn-dribbble mx-1">
+        <i class="fab fa-dribbble"> </i>
+      </a>
+    </li>
+  </ul> -->
+  <div class="footer-copyright text-center py-3">© 2019 Copyright:
+    <a href="javscript:void(0);"> concordia</a>
+  </div>
+
+</footer>

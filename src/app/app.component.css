@@ -1,0 +1,11 @@
+
+.brand-title {
+    position: absolute;
+    width: 100%;
+    padding-top: 10px;
+    top: 70%;
+    left: 0;
+    font-weight: normal;
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+}

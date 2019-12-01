@@ -1,23 +1,23 @@
-<div class="row mt-3">
-    <div class="col-md-9">
+<div class="row mt-3 mb-3">
+    <div class="col-md-12">
         <form #myForm="ngForm" action="javascript:void(0)">
-            <div class="form-group">
-                <div class="custom-control custom-radio custom-control-inline">
+            <div class="form-group primary2">
+                <div class="custom-control custom-radio custom-control-inline mr-4">
                     <input type="radio" class="custom-control-input" id="customRadio1" [checked]="true"
                         value="multiplicity" name="ratype" [(ngModel)]="model.ratype" required>
                     <label class="custom-control-label" for="customRadio1">Bag Semantics</label>
                 </div>
-                <div class="custom-control custom-radio custom-control-inline">
+                <div class="custom-control custom-radio custom-control-inline mr-4">
                     <input type="radio" class="custom-control-input" id="customRadio2" value="probability" name="ratype"
                         [(ngModel)]="model.ratype" required>
                     <label class="custom-control-label" for="customRadio2">Probability</label>
                 </div>
-                <div class="custom-control custom-radio custom-control-inline">
+                <div class="custom-control custom-radio custom-control-inline mr-4">
                     <input type="radio" class="custom-control-input" id="customRadio3" value="certainity" name="ratype"
                         [(ngModel)]="model.ratype" required>
                     <label class="custom-control-label" for="customRadio3">Certainity</label>
                 </div>
-                <div class="custom-control custom-radio custom-control-inline">
+                <div class="custom-control custom-radio custom-control-inline mr-4">
                     <input type="radio" class="custom-control-input" id="customRadio4" value="ploynomial" name="ratype"
                         [(ngModel)]="model.ratype" required>
                     <label class="custom-control-label" for="customRadio4">Provenance Polynomial</label>
@@ -28,78 +28,74 @@
                     <label class="custom-control-label" for="customRadio5">Standard Case</label>
                 </div>
             </div>
-            <div class="fomr-group" *ngIf="model.ratype == 'certainity'">
+            <div class="fomr-group primary2" *ngIf="model.ratype == 'certainity'">
                 <div class="custom-control custom-radio custom-control-inline">
-                    <input type="radio" class="custom-control-input" id="customRadio6" value="certainity1" name="certainity"
-                        [(ngModel)]="model.certainity" required>
+                    <input type="radio" class="custom-control-input" id="customRadio6" value="certainity1"
+                        name="certainity" [(ngModel)]="model.certainity" required>
                     <label class="custom-control-label" for="customRadio6">Confidence Join</label>
                 </div>
                 <div class="custom-control custom-radio custom-control-inline">
-                    <input type="radio" class="custom-control-input" id="customRadio7" value="certainity2" name="certainity"
-                        [(ngModel)]="model.certainity" required>
+                    <input type="radio" class="custom-control-input" id="customRadio7" value="certainity2"
+                        name="certainity" [(ngModel)]="model.certainity" required>
                     <label class="custom-control-label" for="customRadio7">Shiri Semantics</label>
                 </div>
             </div>
             <div class="form-group">
-                <label for="comment">Relational Algebra:</label>
+                <div class="mb-4">
+                    <h1 class="mt-0 mb-2 near-white">Relational Algebra</h1>
+                    <p class="my-0 primary2">Enter Relational Algebra querty to fetch the data.</p>
+                </div>
                 <textarea class="form-control" rows="5" id="comment" #ta
                     placeholder="your query goes here ..."></textarea>
             </div>
             <div class="form-group">
-                <button type="submit" class="btn btn-primary float-right" (click)="submitQuery(ta)">
+                <!-- <button type="submit" class="btn btn-primary float-right" >
+
+                </button> -->
+                <a href="javscript:void(0);" class="border rounded p-2 px-3 mr-4 d-none d-md-inline-block float-right hover-primary4"
+                    (click)="submitQuery(ta)">
                     <span class="spinner-border spinner-border-sm" *ngIf="isFetching" role="status"
                         aria-hidden="true"></span>
                     {{ isFetching ?  'fetching' : 'submit'}}
-                </button>
-                <button class="btn btn-light float-right mr-3" (click)="clear(ta)">Clear</button>
+                    <i class="fas fa-arrow-circle-right white-text ml-2"> </i>
+                </a>
+                <a href="javscript:void(0);" class="border rounded p-2 px-3 mr-4 d-none d-md-inline-block float-right hover-primary4"
+                    (click)="clear(ta)">Clear
+                    <i class="fas fa-trash white-text ml-2"> </i>
+                </a>
+
+                <!-- <button class="btn btn-light float-right mr-3" (click)="clear(ta)">Clear</button> -->
             </div>
         </form>
         <div class="row">
             <div class="col mt-3">
-                <div class="alert alert-warning" *ngIf="!ta.value.length && isEmpty">
+                <div class="alert alert-info info-message" *ngIf="!ta.value.length && isEmpty">
                     Please enter Relational Algebra Query!
                 </div>
                 <!-- <div class="alert alert-warning" *ngIf="isImplemented">
-                    {{model.ratype}} functionality is not yet implemented, Please try with multiplicity and (0 or 1
-                    standard functionality)
-                </div> -->
-                <div class="alert alert-danger" *ngIf="response?.message && ta.value.length">
+                        {{model.ratype}} functionality is not yet implemented, Please try with multiplicity and (0 or 1
+                        standard functionality)
+                    </div> -->
+                <div class="alert alert-info info-message" *ngIf="response?.message && ta.value.length">
                     {{response.message}}
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <h5>Query Syntax</h5>
-        <ul class="mt-3">
-            <li>Projection: <span class="badge badge-secondary">project[a,b](A), π[a,b](A)</span></li>
-            <li>Selection: <span class="badge badge-secondary">select[a,b](A), σ[a,b](A)</span>
-            </li>
-            <li>Natural Join: <span class="badge badge-secondary">(A natjoin B), (A ⋈ B)</span></li>
-            <li>Union: <span class="badge badge-secondary">(A union B), (A ∪ B)</span></li>
-            <li>Cartesian product: <span class="badge badge-secondary">A × B</span></li>
-        </ul>
-    </div>
     <!-- (π<a,c>[((π<a,b>[R] natjoin π<b,c>[R]) U (π<a,c>[R] natjoin π<b,c>[R]))]) -->
-    <ul class="mt-3">
-        <li><b>Sample Query</b> : π[a,c]({{'{'}}{{'{'}}π[a,b](R) natjoin π[b,c](R){{'}'}} ∪ {{'{'}}π[a,c](R) natjoin
-            π[b,c](R){{'}'}}{{'}'}})</li>
-
-        <li>Sel[Number > 14 AND !(Number = 15 OR Number = 18)](Numbers)</li>
-    </ul>
 </div>
 <div class="row">
     <!-- <div class="col mt-3">
-        <div class="alert alert-warning" *ngIf="!ta.value.length && initial">
-            Please enter Relational Algebra Query!
-        </div>
-        <div class="alert alert-danger" *ngIf="response?.error">
-            {{response.error.code}}
-            <span *ngIf="response?.error?.sqlMessage"> "{{response?.error?.sqlMessage}}"</span>
-        </div>
-    </div> -->
+            <div class="alert alert-warning" *ngIf="!ta.value.length && initial">
+                Please enter Relational Algebra Query!
+            </div>
+            <div class="alert alert-danger" *ngIf="response?.error">
+                {{response.error.code}}
+                <span *ngIf="response?.error?.sqlMessage"> "{{response?.error?.sqlMessage}}"</span>
+            </div>
+        </div> -->
     <div class="col-md-12">
-        <table class="table table-bordered mt-3" *ngIf="response.length">
+        <table class="table table-dark mt-3" *ngIf="response.length">
             <thead>
                 <tr>
                     <th *ngFor="let hr of getKeys(response[0], true)">{{hr}}</th>
@@ -111,7 +107,7 @@
                 </tr>
             </tbody>
         </table>
-        <div class="alert alert-warning mt-3" *ngIf="noData && !isEmpty && !response?.message">
+        <div class="alert alert-info info-message mt-3" *ngIf="noData && !isEmpty && !response?.message">
             No data found with requested Query!.
         </div>
     </div>

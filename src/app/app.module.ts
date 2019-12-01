@@ -7,12 +7,14 @@ import { UploadComponent } from './upload/upload.component';
 import { RAComponent } from './ra/ra.component';
 import { ArasService } from './services/aras.service'
 import { FormsModule } from '@angular/forms';
+import { AboutComponent } from './about/about.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     UploadComponent,
-    RAComponent
+    RAComponent,
+    AboutComponent
   ],
   imports: [
     BrowserModule,

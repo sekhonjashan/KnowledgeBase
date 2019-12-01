@@ -47,6 +47,7 @@ export class UploadComponent {
    * if status is fails than throws a validation message or else success status will be shown in the web page
    */
   uploadFile(ele) {
+    this.uploadStatus = false;
     if(this.isValidFormat){
       return ;
     }
@@ -59,6 +60,7 @@ export class UploadComponent {
     this.service.upload_CSV_data(this.fileInfo.name).subscribe((res) => {
       this.fileStaus = res;
       console.log(res);
+      this.fileInfo = null;
       this.isUploaded = false;
       this.uploadStatus = true;
       ele.value = "";

@@ -1,0 +1,20 @@
+#welcome-msg {
+  padding-top: 5em;
+  text-align: center;
+}
+#other-msg {
+  padding-top: 3em;
+  padding-bottom: 3em;
+  max-width: 80%;
+  margin: auto;
+
+}
+h4{
+    font-weight: 300;
+    }
+#another-msg {
+  padding-bottom: 3em;
+  max-width: 80%;
+  margin: auto;
+  font-weight: 200;
+}

@@ -1,26 +1,36 @@
 <div class="row">
     <div class="col-md-12 mt-3">
-        <div class="position-absolute col" style="height: 100%;cursor: no-drop;" *ngIf="isUploaded">
-            <div class="spinner-border text-dark position-absolute" style="top:50%;left:40%;"></div>
+        <div class="mb-4 ml-3">
+            <h1 class="mt-0 mb-2 near-white">Upload Your File</h1>
+            <p class="my-0 primary2">Only .csv and .txt formats are allowed</p>
         </div>
-        <form method="post" action="#" id="#">
-            <div class="form-group files">
-                <label>Upload Your File </label>
-                <input type="file" class="form-control" #upload (change)="fileValidation($event.target)">
-            </div>
-        </form>
     </div>
     <div class="col-md-12">
-        <button class="btn btn-primary float-right" (click)="uploadFile(upload)" [disabled]="isUploaded">Upload</button>
+        <div class="position-absolute col" style="height: 100%;cursor: no-drop; z-index: 999" *ngIf="isUploaded">
+            <div class="spinner-border text-dark position-absolute" style="top:40%;left:45%;color:#1c2331;"></div>
+        </div>
+        <div class="col-md-12 align-self-center">
+            <form method="post" action="#" id="#">
+                <div class="form-group files">
+                    <input type="file" class="form-control" #upload (change)="fileValidation($event.target)">
+                </div>
+            </form>
+            <a href="javscript:void(0);" class="border rounded p-2 px-3 mr-4 d-none d-md-inline-block float-right hover-primary4"
+                (click)="uploadFile(upload)">Upload
+                <i class="fas fa-upload white-text ml-2"> </i>
+            </a>
+        </div>
+
+        <!-- <button class="btn btn-primary float-right" >Upload</button> -->
     </div>
     <div class="col mt-3">
-        <div class="alert alert-danger" *ngIf="isFileSlected">
+        <div class="alert alert-info info-message" *ngIf="isFileSlected">
             Please select a file to upload
         </div>
-        <div class="alert alert-primary" *ngIf="uploadStatus">
+        <div class="alert alert-info info-message" *ngIf="uploadStatus">
             {{fileStaus?.message}}
         </div>
-        <div class="alert alert-danger" *ngIf="isValidFormat">
+        <div class="alert alert-info info-message" *ngIf="isValidFormat">
             "{{fileInfo.name}}" file is not allowed, please upload a valid file.
         </div>
     </div>

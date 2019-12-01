@@ -135,13 +135,15 @@ function raUnion(first, second) {
         let idx = containsObject(unionCollection, secondItem);
         if (idx != -1) {
             let firstItem = unionCollection[idx]['annotation'];
-            if (tab_name == 'multiplicity' || tab_name == 'probability' || tab_name == 'certainity1' || tab_name == 'certainity2') {
+            if (tab_name == 'multiplicity' || tab_name == 'probability' || tab_name == 'certainity1') {
                 let value = (+firstItem) + (+secondItem['annotation']);
                 unionCollection[idx]['annotation'] = (tab_name == 'multiplicity') ? value : value.toFixed(3);
             } else if (tab_name == 'standard') {
                 unionCollection[idx]['annotation'] = logicalDisjunction(+firstItem, +secondItem['annotation']);
             } else if (tab_name == 'ploynomial') {
                 unionCollection[idx]['annotation'] = (firstItem) + '+' + (secondItem['annotation']);
+            }else if (tab_name == 'certainity2') {
+                unionCollection[idx]['annotation'] = Math.min(+firstItem['annotation'], +secondItem['annotation']);
             }
         } else {
             unionCollection.push(secondItem);
